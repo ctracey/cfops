@@ -1,10 +1,36 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-[ -z "${BWS_ACCESS_TOKEN:-}" ] && eval "$(direnv export bash)"
-
 case "${1:-}" in
-  -tf) shift; bws run -- terraform "$@" ;;
-  -wr) shift; bws run -- wrangler "$@" ;;
-    *) echo "Usage: cfops -tf|-wr [args]" >&2; exit 1 ;;
+  init)
+    if [[ -f .envrc ]]; then
+      echo ".envrc already exists — nothing to do."
+      exit 0
+    fi
+    read -rp "Bitwarden machine account name: " account_name
+    cat > .envrc <<EOF
+export BWS_PROFILE_NAME=bws_${account_name}
+export BWS_ACCESS_TOKEN=\$(security find-generic-password -s "\$BWS_PROFILE_NAME" -w)
+EOF
+    echo -e "\033[32m✓\033[0m .envrc created"
+    if ! grep -qxF '.envrc' .gitignore 2>/dev/null; then
+      echo ".envrc" >> .gitignore
+      echo -e "\033[32m✓\033[0m .envrc added to .gitignore"
+    fi
+    echo -e "\033[34m→\033[0m ACTION: run 'direnv allow' to activate. (HINT: this will attempt to read BWS_ACCESS_TOKEN from Keychain — if configured you should see a password prompt)"
+    ;;
+  -tf)
+    shift
+    [ -z "${BWS_ACCESS_TOKEN:-}" ] && eval "$(direnv export bash)"
+    bws run -- terraform "$@"
+    ;;
+  -wr)
+    shift
+    [ -z "${BWS_ACCESS_TOKEN:-}" ] && eval "$(direnv export bash)"
+    bws run -- wrangler "$@"
+    ;;
+  *)
+    echo "Usage: cfops init | cfops -tf|-wr [args]" >&2
+    exit 1
+    ;;
 esac

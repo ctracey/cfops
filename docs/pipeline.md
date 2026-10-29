@@ -41,3 +41,11 @@ Then run:
 ```bash
 mise install
 ```
+
+### Upgrade to latest
+
+To upgrade `cfops` and all other `latest` tools in a consuming project:
+
+```bash
+mise upgrade
+```

@@ -46,3 +46,11 @@ mise install
 `cfops` will be available on `$PATH` whenever you're inside that project directory.
 
 > **NOTE:** By design, `cfops` only works in directories with a `.mise.toml` that declares it as a dependency. Running it outside that context will produce a mise error — this is expected behaviour.
+
+### 2.3 Keep cfops Updated
+
+To upgrade `cfops` and all other `latest` tools to their newest versions:
+
+```bash
+mise upgrade
+```

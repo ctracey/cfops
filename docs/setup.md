@@ -34,9 +34,8 @@ Add the following to your project's `.mise.toml`:
 direnv = "latest"
 terraform = "latest"
 "npm:wrangler" = "latest"
+bitwarden-secrets-manager = "latest"
 ```
-
-> `bws` (Bitwarden Secrets Manager CLI) must be installed separately — see [Usage](usage.md).
 
 ### 2.2 Use
 

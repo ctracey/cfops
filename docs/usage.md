@@ -6,6 +6,13 @@ TODO: cloudflare_poc secops docs
 
 ## 1. How It Works
 
+`cfops` injects Cloudflare credentials from Bitwarden Secrets Manager before delegating to Wrangler or Terraform. Credentials are never stored on disk or exported to the global environment.
+
+- `-wr` — delegates to `wrangler` with credentials injected
+- `-tf` — delegates to `terraform` with credentials injected
+
+The active Cloudflare account (staging vs. prod) is controlled by `BWS_PROFILE_NAME` in the project's `.envrc`. Switching environments is done by updating that value — the tooling itself is account-agnostic.
+
 **Dependencies**
 
 | Tool | Purpose | Install |
@@ -15,14 +22,7 @@ TODO: cloudflare_poc secops docs
 | [Wrangler](https://developers.cloudflare.com/workers/wrangler/) | Cloudflare Workers CLI | `npm install -g wrangler` |
 | [Terraform](https://developer.hashicorp.com/terraform) | Infrastructure provisioning | `brew install hashicorp/tap/terraform` |
 
-> All dependencies except `bws` are managed via `.mise.toml` — see [Setup](setup.md).
-
-`cfops` injects Cloudflare credentials from Bitwarden Secrets Manager before delegating to Wrangler or Terraform. Credentials are never stored on disk or exported to the global environment.
-
-- `-wr` — delegates to `wrangler` with credentials injected
-- `-tf` — delegates to `terraform` with credentials injected
-
-The active Cloudflare account (staging vs. prod) is controlled by `BWS_PROFILE_NAME` in the project's `.envrc`. Switching environments is done by updating that value — the tooling itself is account-agnostic.
+> All dependencies are managed via `.mise.toml` — see [Setup](setup.md).
 
 ## 2. Commands
 

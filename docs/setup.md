@@ -34,7 +34,7 @@ direnv = "latest"
 terraform = "latest"
 "npm:wrangler" = "latest"
 bitwarden-secrets-manager = "latest"
-"ubi:ctracey/cfops" = "latest"
+"github:ctracey/cfops" = "latest"
 ```
 
 ### 2.2 Install cfops CLI

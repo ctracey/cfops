@@ -19,14 +19,14 @@ Pin to a specific version in `.mise.toml`:
 
 ```toml
 [tools]
-"ubi:ctracey/cfops" = "0.1.0"
+"github:ctracey/cfops" = "0.1.0"
 ```
 
 Or use `latest`, noting that mise holds new releases for 24 hours before they are eligible:
 
 ```toml
 [tools]
-"ubi:ctracey/cfops" = "latest"
+"github:ctracey/cfops" = "latest"
 ```
 
 To bypass the 24-hour hold (suitable for personal/ops tooling), add to `~/.config/mise/config.toml`:

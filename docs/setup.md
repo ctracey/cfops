@@ -37,10 +37,12 @@ bitwarden-secrets-manager = "latest"
 "ubi:ctracey/cfops" = "latest"
 ```
 
-### 2.2 Use
+### 2.2 Install cfops CLI
 
 ```bash
 mise install
 ```
 
 `cfops` will be available on `$PATH` whenever you're inside that project directory.
+
+> **NOTE:** By design, `cfops` only works in directories with a `.mise.toml` that declares it as a dependency. Running it outside that context will produce a mise error — this is expected behaviour.

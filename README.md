@@ -4,7 +4,7 @@ CLI tooling for Cloudflare operations, distributed via [mise](https://mise.jdx.d
 
 ## Overview
 
-`cfops` provides the `cf` command — a credential-injecting wrapper around Wrangler and Terraform for managing Cloudflare Workers infrastructure. Rather than living in `~/.zshrc` or being installed globally, it is distributed as a mise tool: projects declare it as a dependency, and mise activates it on `$PATH` only when inside that project directory.
+`cfops` is a credential-injecting wrapper around Wrangler and Terraform for managing Cloudflare Workers infrastructure. Rather than living in `~/.zshrc` or being installed globally, it is distributed as a mise tool: projects declare it as a dependency, and mise activates it on `$PATH` only when inside that project directory.
 
 ## Installation
 
@@ -42,29 +42,29 @@ Then run:
 mise install
 ```
 
-`cf` will be available on `$PATH` whenever you're inside that project directory.
+`cfops` will be available on `$PATH` whenever you're inside that project directory.
 
 ## Usage
 
 ### Wrangler
 
 ```bash
-cf -wr deploy                  # Deploy the worker
-cf -wr deployments status      # Check deployment status
-cf -wr delete                  # Delete the worker (prompts for confirmation)
+cfops -wr deploy                  # Deploy the worker
+cfops -wr deployments status      # Check deployment status
+cfops -wr delete                  # Delete the worker (prompts for confirmation)
 ```
 
 ### Terraform
 
 ```bash
-cf -tf init
-cf -tf plan
-cf -tf apply
+cfops -tf init
+cfops -tf plan
+cfops -tf apply
 ```
 
 ## How it works
 
-`cf` injects Cloudflare credentials from Bitwarden Secrets Manager before delegating to Wrangler or Terraform. Credentials are never stored on disk or exported to the global environment.
+`cfops` injects Cloudflare credentials from Bitwarden Secrets Manager before delegating to Wrangler or Terraform. Credentials are never stored on disk or exported to the global environment.
 
 - `-wr` — delegates to `wrangler` with credentials injected
 - `-tf` — delegates to `terraform` with credentials injected
@@ -90,4 +90,4 @@ cd cfops
 mise install
 ```
 
-Scripts live in `bin/`. The entry point is `bin/cf`.
+Scripts live in `bin/`. The entry point is `bin/cfops`.

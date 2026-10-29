@@ -1,24 +1,22 @@
-# SecOps
+# Usage
 
 Covers credentials, access setup, and secret management for this project. For tooling and deployment see [ops.md](ops.md). For platform and application structure see [architecture.md](architecture.md).
 
-- [1. Cloudflare Access](#1-cloudflare-access)
-- [2. Switching Environments](#2-switching-environments)
-  - [1.1 Setup Access Credentials (Cloudflare)](#11-setup-access-credentials-cloudflare)
-    - [1.1.1 Account ID](#111-account-id)
-    - [1.1.2 API Token](#112-api-token)
+- [1. Cloudflare Credentials](#1-cloudflare-credentials)
+  - [1.1 Setup Access (Cloudflare)](#11-setup-access-cloudflare)
   - [1.2 Store Credentials Securely (Bitwarden Secret Manager)](#12-store-credentials-securely-bitwarden-secret-manager)
-  - [1.3 Environment Var Config](#13-environment-var-config)
-  - [1.4 Secret Manager Token - Local Storage (MacOS Keychain Access)](#14-secret-manager-token---local-storage-macos-keychain-access)
-  - [1.5 Authorised Cloudflare Access (bws cli tool)](#15-authorised-cloudflare-access-bws-cli-tool)
+  - [1.3 Configure Cloudflare Profile (direnv)](#13-configure-cloudflare-profile-direnv)
+  - [1.4 Store Secret Manager Token (MacOS Keychain)](#14-store-secret-manager-token-macos-keychain)
+- [2. Cloudflare Authorisation](#2-cloudflare-authorisation)
+  - [2.1 Secure Secret Usage (bws)](#21-secure-secret-usage-bws)
+  - [2.2 Authorised Cloudflare Operations (mise: cfops)](#22-authorised-cloudflare-operations-mise-cfops)
+- [3. Switching Environments](#3-switching-environments)
 
-## 1. Cloudflare Access
+## 1. Cloudflare Credentials
 
 Secrets are stored in Secrets Manager (Bitwarden) and fetched at runtime via `bws`. Access flows: Keychain → bws → Cloudflare credentials.
 
-[dash.cloudflare.com](https://dash.cloudflare.com)
-
-### 1.1 Setup Access Credentials (Cloudflare)
+### 1.1 Setup Access (Cloudflare)
 
 Two pieces of information needed from the Cloudflare dashboard.
 
@@ -39,15 +37,17 @@ Store the Cloudflare credentials as secrets and create a machine account per dev
 
 In the [Bitwarden web app](https://vault.bitwarden.com), switch to Secrets Manager via the product switcher (set up the free organisation if prompted):
 
-1. Create project `<BITWARDEN_PROJECT_NAME>`
+1. Create project `<BITWARDEN_PROJECT_NAME>` (e.g. `mydomain-cloudflare-staging` or `mydomain-cloudflare-prod`)
 2. Add secret `CLOUDFLARE_API_TOKEN` with the token from 1.1.2 as its value
 3. Add secret `CLOUDFLARE_ACCOUNT_ID` with the account ID from 1.1.1 as its value
 4. Create machine account `<BWS_MACHINE_ACCOUNT_NAME>`, grant it read access to the project
 5. Generate its access token — copy it now, it is only shown once. Store it temporarily (e.g. a notes app) — you will add it to Keychain in 1.4
 
-### 1.3 Environment Var Config
+### 1.3 Configure Cloudflare Profile (direnv)
 
-Create `.envrc` in the project root:
+Configure the Bitwarden profile name for this project so `bws` can retrieve the intended Cloudflare account secrets at runtime.
+
+Using [direnv](https://direnv.net/) we can create env vars based on a config file. Create `.envrc` in the project root with the Bitwarden profile name for this project:
 
 ```bash
 export BWS_PROFILE_NAME=bws_<your-BWS_MACHINE_ACCOUNT_NAME>
@@ -68,7 +68,7 @@ echo BWS_PROFILE_NAME: $BWS_PROFILE_NAME
 
 Expected output: `bws_` followed by the value you set for `<BWS_MACHINE_ACCOUNT_NAME>`. If you see that, direnv is working correctly.
 
-### 1.4 Secret Manager Token - Local Storage (MacOS Keychain Access)
+### 1.4 Store Secret Manager Token (MacOS Keychain)
 
 Store the Secrets Manager (Bitwarden) machine account token in Keychain, requiring your macOS password each time the `bws` CLI reads it.
 
@@ -112,7 +112,11 @@ Verify the token was loaded:
 echo BWS_ACCESS_TOKEN: $BWS_ACCESS_TOKEN
 ```
 
-### 1.5 Authorised Cloudflare Access (bws cli tool)
+## 2. Cloudflare Authorisation
+
+To access [Cloudflare](https://dash.cloudflare.com), both Wrangler and Terraform expect `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` to be set — these must match the secret names configured in 1.2.
+
+### 2.1 Secure Secret Usage (bws)
 
 Credentials are fetched from Bitwarden and injected as env vars for a single command, with nothing persisted to the shell.
 
@@ -126,22 +130,31 @@ bws run -- wrangler whoami   # shows authenticated Cloudflare account
 wrangler whoami              # error: missing or invalid API token
 ```
 
-Add a `cf` function to `~/.zshrc`. It triggers direnv to load `BWS_ACCESS_TOKEN` from Keychain if it isn't already set, then injects it for the duration of the command only — nothing persists to the shell session:
+### 2.2 Authorised Cloudflare Operations (mise: cfops)
+
+`cfops` injects Cloudflare credentials from Bitwarden Secrets Manager before delegating to Wrangler or Terraform. Credentials are never stored on disk or exported to the global environment.
+
+**Wrangler**
+
+`-wr` — delegates to `wrangler` with credentials injected
 
 ```bash
-cf() {
-  [ -z "$BWS_ACCESS_TOKEN" ] && eval "$(direnv export zsh)"
-  case $1 in
-    -tf) shift; bws run -- terraform "$@" ;;
-    -wr) shift; bws run -- wrangler "$@" ;;
-      *) echo "Usage: cf -tf|-wr [args]" ;;
-  esac
-}
+cfops -wr deploy                  # Deploy the worker
+cfops -wr deployments status      # Check deployment status
+cfops -wr delete                  # Delete the worker (prompts for confirmation)
 ```
 
-Usage: `cf -tf apply`, `cf -wr deploy`.
+**Terraform**
 
-## 2. Switching Environments
+`-tf` — delegates to `terraform` with credentials injected
+
+```bash
+cfops -tf init
+cfops -tf plan
+cfops -tf apply
+```
+
+## 3. Switching Environments
 
 Each environment (staging, prod) is a separate Cloudflare account with its own Bitwarden machine account and API token. The active environment is determined by `BWS_PROFILE_NAME` in `.envrc`.
 

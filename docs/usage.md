@@ -1,7 +1,5 @@
 # Usage
 
-TODO: mise binary dependency management
-
 TODO: cloudflare_poc secops docs
 
 ## 1. How It Works
@@ -15,12 +13,12 @@ The active Cloudflare account (staging vs. prod) is controlled by `BWS_PROFILE_N
 
 **Dependencies**
 
-| Tool | Purpose | Install |
+| Tool | Purpose | mise tool |
 |------|---------|---------|
-| [direnv](https://direnv.net/) | Project-scoped env vars | `brew install direnv` |
-| [bws](https://bitwarden.com/help/secrets-manager-cli/) | Bitwarden Secrets Manager CLI | `curl https://bws.bitwarden.com/install \| sh` |
-| [Wrangler](https://developers.cloudflare.com/workers/wrangler/) | Cloudflare Workers CLI | `npm install -g wrangler` |
-| [Terraform](https://developer.hashicorp.com/terraform) | Infrastructure provisioning | `brew install hashicorp/tap/terraform` |
+| [direnv](https://direnv.net/) | Project-scoped env vars | `direnv` |
+| [bws](https://bitwarden.com/help/secrets-manager-cli/) | Bitwarden Secrets Manager CLI | `bitwarden-secrets-manager` |
+| [Wrangler](https://developers.cloudflare.com/workers/wrangler/) | Cloudflare Workers CLI | `npm:wrangler` |
+| [Terraform](https://developer.hashicorp.com/terraform) | Infrastructure provisioning | `terraform` |
 
 > All dependencies are managed via `.mise.toml` — see [Setup](setup.md).
 

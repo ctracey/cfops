@@ -30,11 +30,11 @@ Add the following to your project's `.mise.toml`:
 
 ```toml
 [tools]
-"ubi:ctracey/cfops" = "latest"
 direnv = "latest"
 terraform = "latest"
 "npm:wrangler" = "latest"
 bitwarden-secrets-manager = "latest"
+"ubi:ctracey/cfops" = "latest"
 ```
 
 ### 2.2 Use

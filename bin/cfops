@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+[ -z "${BWS_ACCESS_TOKEN:-}" ] && eval "$(direnv export bash)"
+
+case "${1:-}" in
+  -tf) shift; bws run -- terraform "$@" ;;
+  -wr) shift; bws run -- wrangler "$@" ;;
+    *) echo "Usage: cfops -tf|-wr [args]" >&2; exit 1 ;;
+esac

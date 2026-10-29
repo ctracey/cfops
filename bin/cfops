@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="0.4.1"
+VERSION="0.4.2"
 
 case "${1:-}" in
   -v) echo "cfops $VERSION" ;;
@@ -25,11 +25,21 @@ EOF
   -tf)
     shift
     [ -z "${BWS_ACCESS_TOKEN:-}" ] && eval "$(direnv export bash)"
+    if [[ -z "${BWS_ACCESS_TOKEN:-}" ]]; then
+      echo -e "\033[31m✗\033[0m BWS_ACCESS_TOKEN could not be loaded. Check that the BWS_PROFILE_NAME in .envrc matches the Keychain item name." >&2
+      echo -e "\033[34m→\033[0m See docs/usage.md section 1.4 to set up Keychain access." >&2
+      exit 1
+    fi
     bws run -- terraform "$@"
     ;;
   -wr)
     shift
     [ -z "${BWS_ACCESS_TOKEN:-}" ] && eval "$(direnv export bash)"
+    if [[ -z "${BWS_ACCESS_TOKEN:-}" ]]; then
+      echo -e "\033[31m✗\033[0m BWS_ACCESS_TOKEN could not be loaded. Check that the BWS_PROFILE_NAME in .envrc matches the Keychain item name." >&2
+      echo -e "\033[34m→\033[0m See docs/usage.md section 1.4 to set up Keychain access." >&2
+      exit 1
+    fi
     bws run -- wrangler "$@"
     ;;
   *)

@@ -2,17 +2,18 @@
 
 Covers credentials, access setup, and secret management for this project. For tooling and deployment see [ops.md](ops.md). For platform and application structure see [architecture.md](architecture.md).
 
-- [1. Cloudflare Credentials](#1-cloudflare-credentials)
+- [1. Config Cloudflare Credentials](#1-config-cloudflare-credentials)
   - [1.1 Setup Access (Cloudflare)](#11-setup-access-cloudflare)
   - [1.2 Store Credentials Securely (Bitwarden Secret Manager)](#12-store-credentials-securely-bitwarden-secret-manager)
   - [1.3 Configure Cloudflare Profile (direnv)](#13-configure-cloudflare-profile-direnv)
   - [1.4 Store Secret Manager Token (MacOS Keychain)](#14-store-secret-manager-token-macos-keychain)
-- [2. Cloudflare Authorisation](#2-cloudflare-authorisation)
+- [2. Enable Cloudflare Authorisation](#2-enable-cloudflare-authorisation)
   - [2.1 Secure Secret Usage (bws)](#21-secure-secret-usage-bws)
   - [2.2 Authorised Cloudflare Operations (mise: cfops)](#22-authorised-cloudflare-operations-mise-cfops)
 - [3. Switching Environments](#3-switching-environments)
+- [4. Setting Up Additional Projects](#4-setting-up-additional-projects)
 
-## 1. Cloudflare Credentials
+## 1. Config Cloudflare Credentials
 
 Secrets are stored in Secrets Manager (Bitwarden) and fetched at runtime via `bws`. Access flows: Keychain → bws → Cloudflare credentials.
 
@@ -120,7 +121,7 @@ Verify the token was loaded:
 echo BWS_ACCESS_TOKEN: $BWS_ACCESS_TOKEN
 ```
 
-## 2. Cloudflare Authorisation
+## 2. Enable Cloudflare Authorisation
 
 To access [Cloudflare](https://dash.cloudflare.com), both Wrangler and Terraform expect `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` to be set — these must match the secret names configured in 1.2.
 
@@ -179,3 +180,16 @@ eval "$(direnv export zsh)"
 ```
 
 `wrangler.toml` does not change — the same config deploys to whichever account the credentials belong to.
+
+## 4. Setting Up Additional Projects
+
+Once the initial setup in sections 1 and 2 is complete, setting up cfops for additional projects is straightforward.
+
+```bash
+[ -f .mise.toml ] && echo -e "\033[34m→\033[0m ACTION: .mise.toml already exists, manually update .mise config" || curl -o .mise.toml https://raw.githubusercontent.com/ctracey/cfops/main/templates/.mise.toml
+mise install
+cfops init
+direnv allow
+cfops -wr whoami
+```
+

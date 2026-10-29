@@ -1,4 +1,4 @@
-# cfops CLI tool
+# Cloudflare Operations CLI Tool
 
 CLI tooling for Cloudflare operations, distributed via [mise](https://mise.jdx.dev/).
 
@@ -25,6 +25,7 @@ When you run `cfops -wr deploy` or `cfops -tf apply`, cfops loads the Bitwarden 
 - [Setup](docs/setup.md)
 - [Usage](docs/usage.md)
 - [Pipeline](docs/pipeline.md)
+
 
 ## Prerequisites
 

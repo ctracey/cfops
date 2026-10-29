@@ -26,12 +26,17 @@ Declare `cfops` as a project dependency so mise makes it available automatically
 
 ### 2.1 Config
 
-Add `cfops` as a mise tool in your project's `.mise.toml`:
+Add the following to your project's `.mise.toml`:
 
 ```toml
 [tools]
 "ubi:ctracey/cfops" = "latest"
+direnv = "latest"
+terraform = "latest"
+"npm:wrangler" = "latest"
 ```
+
+> `bws` (Bitwarden Secrets Manager CLI) must be installed separately — see [Usage](usage.md).
 
 ### 2.2 Use
 

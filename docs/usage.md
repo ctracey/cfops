@@ -15,6 +15,8 @@ TODO: cloudflare_poc secops docs
 | [Wrangler](https://developers.cloudflare.com/workers/wrangler/) | Cloudflare Workers CLI | `npm install -g wrangler` |
 | [Terraform](https://developer.hashicorp.com/terraform) | Infrastructure provisioning | `brew install hashicorp/tap/terraform` |
 
+> All dependencies except `bws` are managed via `.mise.toml` — see [Setup](setup.md).
+
 `cfops` injects Cloudflare credentials from Bitwarden Secrets Manager before delegating to Wrangler or Terraform. Credentials are never stored on disk or exported to the global environment.
 
 - `-wr` — delegates to `wrangler` with credentials injected

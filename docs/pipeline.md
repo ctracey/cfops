@@ -49,3 +49,10 @@ To upgrade `cfops` and all other `latest` tools in a consuming project:
 ```bash
 mise upgrade
 ```
+
+If a new release isn't picked up, clear the mise cache first:
+
+```bash
+mise cache clear
+mise upgrade
+```

@@ -47,7 +47,15 @@ In the [Bitwarden web app](https://vault.bitwarden.com), switch to Secrets Manag
 
 Configure the Bitwarden profile name for this project so `bws` can retrieve the intended Cloudflare account secrets at runtime.
 
-Using [direnv](https://direnv.net/) we can create env vars based on a config file. Create `.envrc` in the project root with the Bitwarden profile name for this project:
+Using [direnv](https://direnv.net/) we can create env vars based on a config file.
+
+First, exclude `.envrc` from version control:
+
+```bash
+echo ".envrc" >> .gitignore
+```
+
+Then create `.envrc` in the project root with the Bitwarden profile name for this project:
 
 ```bash
 export BWS_PROFILE_NAME=bws_<your-BWS_MACHINE_ACCOUNT_NAME>

@@ -6,28 +6,27 @@ CLI tooling for Cloudflare operations, distributed via [mise](https://mise.jdx.d
 
 `cfops` is a credential-injecting wrapper around Wrangler and Terraform for managing Cloudflare Workers infrastructure. Rather than living in `~/.zshrc` or being installed globally, it is distributed as a mise tool: projects declare it as a dependency, and mise activates it on `$PATH` only when inside that project directory.
 
-## Installation
+## 1. Environment Mise Setup
 
-### Prerequisites
+### 1.1 Dependencies
 
 | Tool | Purpose | Install |
 |------|---------|---------|
 | [mise](https://mise.jdx.dev/) | Per-project tool management | `brew install mise` |
-| [direnv](https://direnv.net/) | Project-scoped env vars | `brew install direnv` |
-| [bws](https://bitwarden.com/help/secrets-manager-cli/) | Bitwarden Secrets Manager CLI | `curl https://bws.bitwarden.com/install \| sh` |
-| [Wrangler](https://developers.cloudflare.com/workers/wrangler/) | Cloudflare Workers CLI | `npm install -g wrangler` |
-| [Terraform](https://developer.hashicorp.com/terraform) | Infrastructure provisioning | `brew install hashicorp/tap/terraform` |
 
-### Bootstrap your shell (once)
+### 1.2 Setup Shell
 
-Add to `~/.zshrc`:
+Add to `~/.zshrc` (once per machine):
 
 ```zsh
 eval "$(mise activate zsh)"
-eval "$(direnv hook zsh)"
 ```
 
-### Use in a project
+This hooks `cd` so mise can activate per-project tools automatically when you enter a directory.
+
+## 2. Project Setup
+
+### 2.1 Config
 
 Add `cfops` as a mise tool in your project's `.mise.toml`:
 
@@ -36,7 +35,7 @@ Add `cfops` as a mise tool in your project's `.mise.toml`:
 "ubi:ctracey/cfops" = "latest"
 ```
 
-Then run:
+### 2.2 Use
 
 ```bash
 mise install
@@ -44,25 +43,18 @@ mise install
 
 `cfops` will be available on `$PATH` whenever you're inside that project directory.
 
-## Usage
+## 3. cfops CLI Tool
 
-### Wrangler
+### 3.1 How It Works
 
-```bash
-cfops -wr deploy                  # Deploy the worker
-cfops -wr deployments status      # Check deployment status
-cfops -wr delete                  # Delete the worker (prompts for confirmation)
-```
+**Dependencies**
 
-### Terraform
-
-```bash
-cfops -tf init
-cfops -tf plan
-cfops -tf apply
-```
-
-## How it works
+| Tool | Purpose | Install |
+|------|---------|---------|
+| [direnv](https://direnv.net/) | Project-scoped env vars | `brew install direnv` |
+| [bws](https://bitwarden.com/help/secrets-manager-cli/) | Bitwarden Secrets Manager CLI | `curl https://bws.bitwarden.com/install \| sh` |
+| [Wrangler](https://developers.cloudflare.com/workers/wrangler/) | Cloudflare Workers CLI | `npm install -g wrangler` |
+| [Terraform](https://developer.hashicorp.com/terraform) | Infrastructure provisioning | `brew install hashicorp/tap/terraform` |
 
 `cfops` injects Cloudflare credentials from Bitwarden Secrets Manager before delegating to Wrangler or Terraform. Credentials are never stored on disk or exported to the global environment.
 
@@ -71,23 +63,20 @@ cfops -tf apply
 
 The active Cloudflare account (staging vs. prod) is controlled by `BWS_PROFILE_NAME` in the project's `.envrc`. Switching environments is done by updating that value — the tooling itself is account-agnostic.
 
-## Environment model
+### 3.2 cfops Usage
 
-Two environments — staging and prod — separated by Cloudflare account, not by wrangler configuration:
-
-| Environment | Deploy access |
-|-------------|---------------|
-| Staging | Any developer, manual or pipeline |
-| Prod | Pipeline only, or explicit prod-admin action |
-
-Developers hold staging credentials only. Prod credentials live exclusively in CI.
-
-## Development
+**Wrangler**
 
 ```bash
-git clone https://github.com/ctracey/cfops
-cd cfops
-mise install
+cfops -wr deploy                  # Deploy the worker
+cfops -wr deployments status      # Check deployment status
+cfops -wr delete                  # Delete the worker (prompts for confirmation)
 ```
 
-Scripts live in `bin/`. The entry point is `bin/cfops`.
+**Terraform**
+
+```bash
+cfops -tf init
+cfops -tf plan
+cfops -tf apply
+```

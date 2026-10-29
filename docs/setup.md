@@ -37,6 +37,12 @@ bitwarden-secrets-manager = "latest"
 "github:ctracey/cfops" = "latest"
 ```
 
+If you don't have a `.mise.toml` yet, download the template from this repo:
+
+```bash
+curl -o .mise.toml https://raw.githubusercontent.com/ctracey/cfops/main/templates/.mise.toml
+```
+
 ### 2.2 Install cfops CLI
 
 ```bash

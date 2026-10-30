@@ -25,6 +25,7 @@ When you run `cfops -wr deploy` or `cfops -tf apply`, cfops loads the Bitwarden 
 - [Setup](docs/setup.md)
 - [Usage](docs/usage.md)
 - [Pipeline](docs/pipeline.md)
+- [Cloudflare Operations Guide](docs/ops-guide.md)
 
 
 ## Prerequisites

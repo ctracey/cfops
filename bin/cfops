@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="0.4.2"
+VERSION="0.4.3"
 
 case "${1:-}" in
   -v) echo "cfops $VERSION" ;;
@@ -21,6 +21,12 @@ EOF
       echo -e "\033[32m✓\033[0m .envrc added to .gitignore"
     fi
     echo -e "\033[34m→\033[0m ACTION: run 'direnv allow' to activate. (HINT: this will attempt to read BWS_ACCESS_TOKEN from Keychain — if configured you should see a password prompt)"
+    if command -v node &>/dev/null; then
+      node_major=$(node --version | sed 's/v\([0-9]*\).*/\1/')
+      if [[ "$node_major" -lt 22 ]]; then
+        echo -e "\033[34m→\033[0m ACTION: node version is $( node --version ) — wrangler requires node 22 or higher."
+      fi
+    fi
     ;;
   -tf)
     shift

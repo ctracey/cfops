@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="0.4.3"
+VERSION="0.4.4"
 
 case "${1:-}" in
   -v) echo "cfops $VERSION" ;;
@@ -27,6 +27,7 @@ EOF
         echo -e "\033[34m→\033[0m ACTION: node version is $( node --version ) — wrangler requires node 22 or higher."
       fi
     fi
+    echo "  HINT: test working with: cfops -wr whoami"
     ;;
   -tf)
     shift

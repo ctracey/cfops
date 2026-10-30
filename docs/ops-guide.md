@@ -70,9 +70,13 @@ On first deploy Cloudflare prompts for a `workers.dev` subdomain — this is acc
 https://<worker-name>.<your-subdomain>.workers.dev
 ```
 
-To see all current deployments for the active account, navigate to **Workers & Pages** in the Cloudflare dashboard.
+To see all current deployments for the active account:
 
-> TODO: add `cfops -ls` command to open the Workers & Pages dashboard for the active account directly from the CLI.
+```bash
+cfops -ls
+```
+
+This opens the Workers & Pages dashboard for the active account directly in the browser.
 
 ### 3.3 Deployment Status
 

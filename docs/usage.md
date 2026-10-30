@@ -143,6 +143,14 @@ wrangler whoami              # error: missing or invalid API token
 
 `cfops` injects Cloudflare credentials from Bitwarden Secrets Manager before delegating to Wrangler or Terraform. Credentials are never stored on disk or exported to the global environment.
 
+**Dashboard**
+
+`-ls` — opens the Workers & Pages dashboard for the active account in the browser
+
+```bash
+cfops -ls
+```
+
 **Wrangler**
 
 `-wr` — delegates to `wrangler` with credentials injected

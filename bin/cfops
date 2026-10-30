@@ -1,9 +1,40 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VERSION="0.4.4"
+VERSION="0.4.5"
+
+show_help() {
+  echo -e "\033[1mcfops $VERSION\033[0m — Cloudflare operations CLI"
+  echo
+  echo -e "\033[1mUsage:\033[0m"
+  echo "  cfops <command> [args]"
+  echo
+  echo -e "\033[1mCommands:\033[0m"
+  echo "  init        Initialise .envrc for the current project"
+  echo "  -ls         Open Workers & Pages dashboard for the active account"
+  echo "  -wr <args>  Run a Wrangler command with credentials injected"
+  echo "  -tf <args>  Run a Terraform command with credentials injected"
+  echo "  -v          Show version"
+  echo "  -h          Show this help"
+  echo
+  echo -e "\033[1mExamples:\033[0m"
+  echo "  cfops -wr deploy"
+  echo "  cfops -wr deployments status"
+  echo "  cfops -tf plan"
+  echo "  cfops -ls"
+}
+
+require_bws_token() {
+  [ -z "${BWS_ACCESS_TOKEN:-}" ] && eval "$(direnv export bash)"
+  if [[ -z "${BWS_ACCESS_TOKEN:-}" ]]; then
+    echo -e "\033[31m✗\033[0m BWS_ACCESS_TOKEN could not be loaded. Check that the BWS_PROFILE_NAME in .envrc matches the Keychain item name." >&2
+    echo -e "\033[34m→\033[0m See docs/usage.md section 1.4 to set up Keychain access." >&2
+    exit 1
+  fi
+}
 
 case "${1:-}" in
+  -h|--help) show_help ;;
   -v) echo "cfops $VERSION" ;;
   init)
     if [[ -f .envrc ]]; then
@@ -29,28 +60,23 @@ EOF
     fi
     echo "  HINT: test working with: cfops -wr whoami"
     ;;
+  -ls)
+    require_bws_token
+    account_id=$(bws run -- printenv CLOUDFLARE_ACCOUNT_ID)
+    open "https://dash.cloudflare.com/${account_id}/workers-and-pages"
+    ;;
   -tf)
     shift
-    [ -z "${BWS_ACCESS_TOKEN:-}" ] && eval "$(direnv export bash)"
-    if [[ -z "${BWS_ACCESS_TOKEN:-}" ]]; then
-      echo -e "\033[31m✗\033[0m BWS_ACCESS_TOKEN could not be loaded. Check that the BWS_PROFILE_NAME in .envrc matches the Keychain item name." >&2
-      echo -e "\033[34m→\033[0m See docs/usage.md section 1.4 to set up Keychain access." >&2
-      exit 1
-    fi
+    require_bws_token
     bws run -- terraform "$@"
     ;;
   -wr)
     shift
-    [ -z "${BWS_ACCESS_TOKEN:-}" ] && eval "$(direnv export bash)"
-    if [[ -z "${BWS_ACCESS_TOKEN:-}" ]]; then
-      echo -e "\033[31m✗\033[0m BWS_ACCESS_TOKEN could not be loaded. Check that the BWS_PROFILE_NAME in .envrc matches the Keychain item name." >&2
-      echo -e "\033[34m→\033[0m See docs/usage.md section 1.4 to set up Keychain access." >&2
-      exit 1
-    fi
+    require_bws_token
     bws run -- wrangler "$@"
     ;;
   *)
-    echo "Usage: cfops init | cfops -tf|-wr [args]" >&2
+    echo -e "Unknown command. Run '\033[1mcfops -h\033[0m' for usage." >&2
     exit 1
     ;;
 esac

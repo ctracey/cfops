@@ -61,7 +61,7 @@ Worker names reflect type only — environment separation is handled by the acco
 Wrangler creates the worker on first deploy and serves assets from `dist/`. No pre-provisioning required for `*.workers.dev`:
 
 ```bash
-cfops -wr deploy
+cfops deploy
 ```
 
 On first deploy Cloudflare prompts for a `workers.dev` subdomain — this is account-level and applies to all workers. The deployed URL will be:
@@ -73,7 +73,7 @@ https://<worker-name>.<your-subdomain>.workers.dev
 To see all current deployments for the active account:
 
 ```bash
-cfops -ls
+cfops list
 ```
 
 This opens the Workers & Pages dashboard for the active account directly in the browser.
@@ -91,7 +91,7 @@ cfops -wr deployments status
 Delete the worker (uses name from `wrangler.toml`). Prompts for confirmation:
 
 ```bash
-cfops -wr delete
+cfops delete
 ```
 
 ### 3.5 Terraform *(future)*

@@ -11,17 +11,20 @@ show_help() {
   echo
   echo -e "\033[1mCommands:\033[0m"
   echo "  init        Initialise .envrc for the current project"
-  echo "  -ls         Open Workers & Pages dashboard for the active account"
-  echo "  -wr <args>  Run a Wrangler command with credentials injected"
-  echo "  -tf <args>  Run a Terraform command with credentials injected"
+  echo "  list        Open Workers & Pages dashboard for the active account"
+  echo "  deploy      Deploy the worker (shorthand for -wr deploy)"
+  echo "  delete      Delete the worker (shorthand for -wr delete)"
+  echo "  -wr <args>  Run any Wrangler command with credentials injected"
+  echo "  -tf <args>  Run any Terraform command with credentials injected"
   echo "  -v          Show version"
   echo "  -h          Show this help"
   echo
   echo -e "\033[1mExamples:\033[0m"
-  echo "  cfops -wr deploy"
+  echo "  cfops deploy"
+  echo "  cfops delete"
+  echo "  cfops list"
   echo "  cfops -wr deployments status"
   echo "  cfops -tf plan"
-  echo "  cfops -ls"
 }
 
 require_bws_token() {
@@ -60,10 +63,18 @@ EOF
     fi
     echo "  HINT: test working with: cfops -wr whoami"
     ;;
-  -ls)
+  list)
     require_bws_token
     account_id=$(bws run -- printenv CLOUDFLARE_ACCOUNT_ID)
     open "https://dash.cloudflare.com/${account_id}/workers-and-pages"
+    ;;
+  deploy)
+    require_bws_token
+    bws run -- wrangler deploy
+    ;;
+  delete)
+    require_bws_token
+    bws run -- wrangler delete
     ;;
   -tf)
     shift

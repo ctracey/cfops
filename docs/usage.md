@@ -145,10 +145,10 @@ wrangler whoami              # error: missing or invalid API token
 
 **Dashboard**
 
-`-ls` — opens the Workers & Pages dashboard for the active account in the browser
+`list` — opens the Workers & Pages dashboard for the active account in the browser
 
 ```bash
-cfops -ls
+cfops list
 ```
 
 **Wrangler**
@@ -156,9 +156,9 @@ cfops -ls
 `-wr` — delegates to `wrangler` with credentials injected
 
 ```bash
-cfops -wr deploy                  # Deploy the worker
-cfops -wr deployments status      # Check deployment status
-cfops -wr delete                  # Delete the worker (prompts for confirmation)
+cfops deploy                      # Deploy the worker
+cfops delete                      # Delete the worker (prompts for confirmation)
+cfops -wr deployments status      # Check deployment status (or any other Wrangler command)
 ```
 
 **Terraform**

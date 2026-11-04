@@ -70,21 +70,21 @@ EOF
     ;;
   deploy)
     require_bws_token
-    bws run -- wrangler deploy
+    bws run -- "$(dirname "$0")/wr-run" deploy
     ;;
   delete)
     require_bws_token
-    bws run -- wrangler delete
+    bws run -- "$(dirname "$0")/wr-run" delete
     ;;
   -tf)
     shift
     require_bws_token
-    bws run -- terraform "$@"
+    bws run -- "$(dirname "$0")/tf-run" "$@"
     ;;
   -wr)
     shift
     require_bws_token
-    bws run -- wrangler "$@"
+    bws run -- "$(dirname "$0")/wr-run" "$@"
     ;;
   *)
     echo -e "Unknown command. Run '\033[1mcfops -h\033[0m' for usage." >&2

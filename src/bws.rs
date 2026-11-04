@@ -1,20 +1,13 @@
 use std::collections::HashMap;
 use std::process::{ExitStatus, Stdio};
 use anyhow::{Context, Result};
-use serde::Deserialize;
 
 use crate::credentials::BwsToken;
 use crate::env_mapping::{apply_mappings, EnvMapping};
 
-#[derive(Deserialize)]
-struct BwsSecret {
-    key: String,
-    value: String,
-}
-
 fn fetch_secrets(token: &BwsToken) -> Result<HashMap<String, String>> {
     let output = std::process::Command::new("bws")
-        .args(["secret", "list", "--output", "json"])
+        .args(["run", "--", "env"])
         .env("BWS_ACCESS_TOKEN", &token.0)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -26,10 +19,31 @@ fn fetch_secrets(token: &BwsToken) -> Result<HashMap<String, String>> {
         anyhow::bail!("bws failed: {stderr}");
     }
 
-    let secrets: Vec<BwsSecret> =
-        serde_json::from_slice(&output.stdout).context("failed to parse bws secret list output")?;
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    Ok(parse_env_lines(&stdout))
+}
 
-    Ok(secrets.into_iter().map(|s| (s.key, s.value)).collect())
+fn parse_env_lines(output: &str) -> HashMap<String, String> {
+    output
+        .lines()
+        .filter_map(|line| {
+            let (key, value) = line.split_once('=')?;
+            Some((key.to_string(), value.to_string()))
+        })
+        .collect()
+}
+
+fn extract_required_secrets(
+    bws_env: HashMap<String, String>,
+    mappings: &[EnvMapping],
+) -> HashMap<String, String> {
+    let required_keys: std::collections::HashSet<&str> =
+        mappings.iter().map(|m| m.from).collect();
+
+    bws_env
+        .into_iter()
+        .filter(|(key, _)| required_keys.contains(key.as_str()))
+        .collect()
 }
 
 pub fn get_secret(token: &BwsToken, key: &str) -> Result<String> {
@@ -44,8 +58,11 @@ pub fn run_with_mappings(
     token: &BwsToken,
     mappings: &[EnvMapping],
 ) -> Result<ExitStatus> {
+    let bws_env = fetch_secrets(token)?;
+    let secrets = extract_required_secrets(bws_env, mappings);
+
     let mut env: HashMap<String, String> = std::env::vars().collect();
-    env.extend(fetch_secrets(token)?);
+    env.extend(secrets);
     apply_mappings(&mut env, mappings);
 
     std::process::Command::new(binary)

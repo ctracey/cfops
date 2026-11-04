@@ -209,8 +209,8 @@ fn wrangler_receives_mapped_cloudflare_api_token() {
         mock_dir.path(),
         "bws",
         r#"
-if [ "$1" = "secret" ] && [ "$2" = "list" ]; then
-    echo '[{"id":"1","key":"CLOUDFLARE_WORKER_PROVISION_TOKEN","value":"worker_token_123","organizationId":"","projectId":"","note":"","creationDate":"2024-01-01T00:00:00Z","revisionDate":"2024-01-01T00:00:00Z"}]'
+if [ "$1" = "run" ] && [ "$3" = "env" ]; then
+    echo "CLOUDFLARE_WORKER_PROVISION_TOKEN=worker_token_123"
 fi
 "#,
     );
@@ -240,8 +240,8 @@ fn wrangler_long_flag_behaves_identically_to_short() {
         mock_dir.path(),
         "bws",
         r#"
-if [ "$1" = "secret" ] && [ "$2" = "list" ]; then
-    echo '[{"id":"1","key":"CLOUDFLARE_WORKER_PROVISION_TOKEN","value":"token_abc","organizationId":"","projectId":"","note":"","creationDate":"2024-01-01T00:00:00Z","revisionDate":"2024-01-01T00:00:00Z"}]'
+if [ "$1" = "run" ] && [ "$3" = "env" ]; then
+    echo "CLOUDFLARE_WORKER_PROVISION_TOKEN=token_abc"
 fi
 "#,
     );
@@ -280,8 +280,8 @@ fn wrangler_propagates_exit_code() {
         mock_dir.path(),
         "bws",
         r#"
-if [ "$1" = "secret" ] && [ "$2" = "list" ]; then
-    echo '[]'
+if [ "$1" = "run" ] && [ "$3" = "env" ]; then
+    echo "PLACEHOLDER=unused"
 fi
 "#,
     );
@@ -308,8 +308,11 @@ fn terraform_receives_all_mapped_env_vars() {
         mock_dir.path(),
         "bws",
         r#"
-if [ "$1" = "secret" ] && [ "$2" = "list" ]; then
-    echo '[{"id":"1","key":"CLOUDFLARE_DNS_CONFIG_TOKEN","value":"dns_token_xyz","organizationId":"","projectId":"","note":"","creationDate":"2024-01-01T00:00:00Z","revisionDate":"2024-01-01T00:00:00Z"},{"id":"2","key":"CLOUDFLARE_R2_TERRAFORM_STATE_ACCESS_KEY_ID","value":"key_id_abc","organizationId":"","projectId":"","note":"","creationDate":"2024-01-01T00:00:00Z","revisionDate":"2024-01-01T00:00:00Z"},{"id":"3","key":"CLOUDFLARE_R2_TERRAFORM_STATE_SECRET_ACCESS_KEY","value":"secret_def","organizationId":"","projectId":"","note":"","creationDate":"2024-01-01T00:00:00Z","revisionDate":"2024-01-01T00:00:00Z"},{"id":"4","key":"CLOUDFLARE_ACCOUNT_ID","value":"account_ghi","organizationId":"","projectId":"","note":"","creationDate":"2024-01-01T00:00:00Z","revisionDate":"2024-01-01T00:00:00Z"}]'
+if [ "$1" = "run" ] && [ "$3" = "env" ]; then
+    echo "CLOUDFLARE_DNS_CONFIG_TOKEN=dns_token_xyz"
+    echo "CLOUDFLARE_R2_TERRAFORM_STATE_ACCESS_KEY_ID=key_id_abc"
+    echo "CLOUDFLARE_R2_TERRAFORM_STATE_SECRET_ACCESS_KEY=secret_def"
+    echo "CLOUDFLARE_ACCOUNT_ID=account_ghi"
 fi
 "#,
     );
@@ -345,8 +348,8 @@ fn terraform_long_flag_behaves_identically_to_short() {
         mock_dir.path(),
         "bws",
         r#"
-if [ "$1" = "secret" ] && [ "$2" = "list" ]; then
-    echo '[]'
+if [ "$1" = "run" ] && [ "$3" = "env" ]; then
+    echo "PLACEHOLDER=unused"
 fi
 "#,
     );
@@ -381,8 +384,8 @@ fn terraform_propagates_exit_code() {
         mock_dir.path(),
         "bws",
         r#"
-if [ "$1" = "secret" ] && [ "$2" = "list" ]; then
-    echo '[]'
+if [ "$1" = "run" ] && [ "$3" = "env" ]; then
+    echo "PLACEHOLDER=unused"
 fi
 "#,
     );

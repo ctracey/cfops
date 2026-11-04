@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-exec env \
-  CLOUDFLARE_API_TOKEN="$CLOUDFLARE_WORKER_PROVISION_TOKEN" \
-  wrangler "$@"

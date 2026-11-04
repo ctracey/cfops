@@ -25,12 +25,19 @@ Two pieces of information needed from the Cloudflare dashboard.
 
 Your Account ID is in the URL of any dashboard page: `dash.cloudflare.com/<account-id>/...`
 
-#### 1.1.2 API Token
+#### 1.1.2 API Tokens
 
-Create an API token scoped to Worker script edits.
+Two tokens are required, each scoped to the minimum permissions for its purpose.
 
+**Worker provisioning token** (used by Wrangler)
 - [Dashboard → My Profile → API Tokens → Create Token](https://dash.cloudflare.com/profile/api-tokens)
 - Use the **Edit Cloudflare Workers** template (Account → Workers Scripts → Edit)
+
+**DNS config token** (used by Terraform)
+- [Dashboard → My Profile → API Tokens → Create Token](https://dash.cloudflare.com/profile/api-tokens)
+- Use the **Edit zone DNS** template (Zone → DNS → Edit)
+
+> TODO: comprehensive DNS config and R2 details
 
 ### 1.2 Store Credentials Securely (Bitwarden Secret Manager)
 
@@ -39,10 +46,11 @@ Store the Cloudflare credentials as secrets and create a machine account per dev
 In the [Bitwarden web app](https://vault.bitwarden.com), switch to Secrets Manager via the product switcher (set up the free organisation if prompted):
 
 1. Create project `<BITWARDEN_PROJECT_NAME>` (e.g. `mydomain-cloudflare-staging` or `mydomain-cloudflare-prod`)
-2. Add secret `CLOUDFLARE_API_TOKEN` with the token from 1.1.2 as its value
-3. Add secret `CLOUDFLARE_ACCOUNT_ID` with the account ID from 1.1.1 as its value
-4. Create machine account `<BWS_MACHINE_ACCOUNT_NAME>`, grant it read access to the project
-5. Generate its access token — copy it now, it is only shown once. Store it temporarily (e.g. a notes app) — you will add it to Keychain in 1.4
+2. Add secret `CLOUDFLARE_WORKER_PROVISION_TOKEN` with the Worker provisioning token from 1.1.2 as its value
+3. Add secret `CLOUDFLARE_DNS_CONFIG_TOKEN` with the DNS config token from 1.1.2 as its value
+4. Add secret `CLOUDFLARE_ACCOUNT_ID` with the account ID from 1.1.1 as its value
+5. Create machine account `<BWS_MACHINE_ACCOUNT_NAME>`, grant it read access to the project
+6. Generate its access token — copy it now, it is only shown once. Store it temporarily (e.g. a notes app) — you will add it to Keychain in 1.4
 
 ### 1.3 Configure Cloudflare Profile (direnv)
 
@@ -123,13 +131,18 @@ echo BWS_ACCESS_TOKEN: $BWS_ACCESS_TOKEN
 
 ## 2. Enable Cloudflare Authorisation
 
-To access [Cloudflare](https://dash.cloudflare.com), both Wrangler and Terraform expect `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` to be set — these must match the secret names configured in 1.2.
+To access [Cloudflare](https://dash.cloudflare.com), both Wrangler and Terraform expect `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` to be set. cfops maps the purpose-scoped secrets from Bitwarden to `CLOUDFLARE_API_TOKEN` depending on the tool:
+
+| Tool | Bitwarden secret | Mapped to |
+|------|-----------------|-----------|
+| Wrangler | `CLOUDFLARE_WORKER_PROVISION_TOKEN` | `CLOUDFLARE_API_TOKEN` |
+| Terraform | `CLOUDFLARE_DNS_CONFIG_TOKEN` | `CLOUDFLARE_API_TOKEN` |
 
 ### 2.1 Secure Secret Usage (bws)
 
 Credentials are fetched from Bitwarden and injected as env vars for a single command, with nothing persisted to the shell.
 
-Secret names in Bitwarden become env var names — `CLOUDFLARE_API_TOKEN` in Bitwarden is injected as `$CLOUDFLARE_API_TOKEN` for the duration of the command. Without `bws run`, those vars don't exist in the shell.
+Secret names in Bitwarden become env var names for the duration of the command. cfops then maps them to the env vars each tool expects — `CLOUDFLARE_WORKER_PROVISION_TOKEN` becomes `CLOUDFLARE_API_TOKEN` for Wrangler, `CLOUDFLARE_DNS_CONFIG_TOKEN` becomes `CLOUDFLARE_API_TOKEN` for Terraform. Without `bws run`, those vars don't exist in the shell.
 
 Verify credentials are injected correctly — `wrangler whoami` returns an auth error without `bws run`, and the authenticated account with it:
 

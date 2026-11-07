@@ -1,6 +1,6 @@
 # Cloudflare Operations Guide
 
-Covers tooling, provisioning, and deployment for this project. For platform and application structure see [architecture.md](architecture.md).
+Covers tooling, provisioning, and deployment for this project.
 
 - [1. Tooling](#1-tooling)
 - [2. Environments](#2-environments)

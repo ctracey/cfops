@@ -2,12 +2,17 @@
 
 Operational commands for worker provisioning and DNS config. Assumes [setup](setup.md) is complete.
 
-- [1. Worker Operations](#1-worker-operations)
-- [2. DNS Config](#2-dns-config)
-- [3. Switching Environments](#3-switching-environments)
-- [4. Setting Up Additional Projects](#4-setting-up-additional-projects)
+- [1. Operations](#1-operations)
+- [2. Switching Environments](#2-switching-environments)
+- [3. Setting Up Additional Projects](#3-setting-up-additional-projects)
 
-## 1. Worker Operations
+## 1. Operations
+
+Following the installation and setup guides you are ready for operations.
+
+Follow the [ops guide](ops-guide.md) for practical examples for worker provisioning and DNS config (nameserver delegation & hostname routing).
+
+### 1.1 Worker Operations
 
 `cfops` injects Cloudflare credentials from Bitwarden before delegating to Wrangler. Credentials are never stored on disk or exported to the shell.
 
@@ -17,9 +22,12 @@ cfops delete                      # Delete the worker (prompts for confirmation)
 cfops -wr whoami                  # Verify authenticated account
 cfops -wr deployments status      # Any other Wrangler command
 cfops list                        # Open Workers & Pages dashboard
+cfops -wr -h                      # Full Wrangler help — cfops is a full delegation
 ```
 
-## 2. DNS Config
+### 1.2 DNS Config
+
+> **Prerequisite:** [DNS Setup Guide](dns/dns-setup.md) must be completed before running any Terraform commands.
 
 `cfops` injects Cloudflare credentials and R2 state backend credentials before delegating to Terraform.
 
@@ -27,11 +35,10 @@ cfops list                        # Open Workers & Pages dashboard
 cfops -tf init -backend-config=terraform/backend.hcl
 cfops -tf plan
 cfops -tf apply
+cfops -tf -h                      # Full Terraform help — cfops is a full delegation
 ```
 
-For the full DNS provisioning workflow — zone creation, www redirect, nameserver delegation — see [DNS Config](dns/dns.md).
-
-## 3. Switching Environments
+## 2. Switching Environments
 
 Each environment (staging, prod) is a separate Cloudflare account with its own Bitwarden machine account. The active environment is determined by `BWS_PROFILE_NAME` in `.envrc`.
 
@@ -49,7 +56,7 @@ eval "$(direnv export zsh)"
 
 `wrangler.toml` does not change — the same config deploys to whichever account the credentials belong to.
 
-## 4. Setting Up Additional Projects
+## 3. Setting Up Additional Projects
 
 Once credentials are in Bitwarden and Keychain for an account, additional projects on that account only need:
 

@@ -14,7 +14,7 @@ Terraform manages all DNS configuration for `<DOMAIN>`, eliminating clickops whe
 
 ## 1. Prerequisite: DNS IaC Setup
 
-Before running any Terraform commands, complete the [DNS IaC Setup](dns-IaC-setup.md) — this provisions the Cloudflare token and R2 state backend that Terraform depends on.
+Before running any Terraform commands, complete the [DNS IaC Setup](dns-setup.md) — this provisions the Cloudflare token and R2 state backend that Terraform depends on.
 
 ## 2. Cloudflare Zone & DNS Config
 

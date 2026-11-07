@@ -3,8 +3,8 @@
 Per-project configuration — credentials, project init, and IaC setup. Gets the project to a ready state for [usage](usage.md).
 
 - [1. Credentials](#1-credentials)
-- [2. Project Init](#2-project-init)
-- [3. DNS IaC Setup](#3-dns-iac-setup)
+- [2. DNS IaC Setup](#2-dns-iac-setup)
+- [3. Project Init](#3-project-init)
 
 ## 1. Credentials
 
@@ -17,7 +17,7 @@ Credentials are stored in Bitwarden Secrets Manager and fetched at runtime via `
 **API Tokens** — two tokens, each scoped to the minimum permissions for its purpose:
 
 - **Worker provisioning token** (Wrangler): [Dashboard → My Profile → API Tokens → Create Token](https://dash.cloudflare.com/profile/api-tokens) → **Edit Cloudflare Workers** template
-- **DNS config token** (Terraform): [Dashboard → My Profile → API Tokens → Create Token](https://dash.cloudflare.com/profile/api-tokens) → **Edit zone DNS** template (see [DNS IaC Setup](dns/dns-IaC-setup.md) for required permissions)
+- **DNS config token** (Terraform): [Dashboard → My Profile → API Tokens → Create Token](https://dash.cloudflare.com/profile/api-tokens) → **Edit zone DNS** template (see [DNS IaC Setup](dns/dns-setup.md) for required permissions)
 
 ### 1.2 Store Credentials (Bitwarden)
 
@@ -45,7 +45,11 @@ Then configure access control so every read requires your macOS password:
 3. In **"Always allow access by these applications"**, select `security` and remove it
 4. Save Changes
 
-## 2. Project Init
+## 2. DNS IaC Setup
+
+If you're going to use cfops for DNS config, set up DNS IaC by following the [DNS Setup Guide](dns/dns-setup.md).
+
+## 3. Project Init
 
 Run `cfops init` to scaffold the project:
 
@@ -65,10 +69,6 @@ Verify credentials are working:
 ```bash
 cfops -wr whoami
 ```
-
-## 3. DNS IaC Setup
-
-Before running any Terraform commands, complete the [DNS IaC Setup](dns/dns-IaC-setup.md) — this provisions the R2 state bucket and R2 access keys that Terraform depends on.
 
 ## 4. Setup Complete
 

@@ -1,4 +1,4 @@
-# DNS IaC Setup
+# DNS Setup Guide
 
 A guide to setting up Terraform as the Infrastructure as Code tool for managing DNS config — covering credentials, state persistence, and backend access.
 
@@ -11,7 +11,7 @@ A guide to setting up Terraform as the Infrastructure as Code tool for managing 
 
 ## 1. Tooling
 
-> **Prerequisite:** cfops must be installed and configured before running any commands here. See [ops.md § Tooling](../ops.md#1-tooling).
+> **Prerequisite:** cfops must be installed and configured before running any commands here. See [Installation Guide](../installation.md).
 
 > **Note:** Wrangler and Terraform use separate API tokens — intentionally scoped independently. Terraform has no worker permissions; Wrangler has no zone permissions. cfops dynamically maps the appropriate token to `CLOUDFLARE_API_TOKEN` based on the operation — `CLOUDFLARE_WORKER_PROVISION_TOKEN` for Wrangler commands, `CLOUDFLARE_DNS_CONFIG_TOKEN` for Terraform commands.
 

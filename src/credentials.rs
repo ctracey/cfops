@@ -19,7 +19,7 @@ pub fn load() -> Result<BwsToken> {
     bail!(
         "\x1b[31m✗\x1b[0m BWS_ACCESS_TOKEN could not be loaded. \
         Check that the BWS_PROFILE_NAME in .envrc matches the Keychain item name.\n\
-        \x1b[34m→\x1b[0m See docs/usage.md section 1.4 to set up Keychain access."
+        \x1b[34m→\x1b[0m See docs/setup.md section 1.3 to set up Keychain access."
     )
 }
 

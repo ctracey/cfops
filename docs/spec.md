@@ -156,7 +156,7 @@ command:  cfops -wr whoami
 stdout:   (empty)
 stderr:   contains "BWS_ACCESS_TOKEN could not be loaded"
           contains "BWS_PROFILE_NAME"
-          contains "docs/usage.md"
+          contains "docs/setup.md"
 exit:     1
 ```
 

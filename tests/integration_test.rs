@@ -285,7 +285,7 @@ fn missing_bws_token_exits_with_error() {
         .failure()
         .stderr(predicate::str::contains("BWS_ACCESS_TOKEN could not be loaded"))
         .stderr(predicate::str::contains("BWS_PROFILE_NAME"))
-        .stderr(predicate::str::contains("docs/usage.md"));
+        .stderr(predicate::str::contains("docs/setup.md"));
 }
 
 // ── -wr / --wrangler ──────────────────────────────────────────────────────────

@@ -17,7 +17,7 @@ Covers tooling, provisioning, and deployment for this project. For platform and 
 
 [cfops](https://github.com/ctracey/cfops) is the ops tool for managing Cloudflare deployments in this project. It wraps Wrangler and Terraform with credential injection via Bitwarden Secrets Manager, so credentials are never stored on disk or exported to the shell.
 
-See cfops [setup](https://github.com/ctracey/cfops/blob/main/docs/setup.md) and [usage](https://github.com/ctracey/cfops/blob/main/docs/usage.md) for installation and credential configuration.
+See cfops [installation](https://github.com/ctracey/cfops/blob/main/docs/installation.md) and [setup](https://github.com/ctracey/cfops/blob/main/docs/setup.md) for installation and credential configuration.
 
 ## 2. Environments
 

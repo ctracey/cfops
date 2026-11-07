@@ -22,10 +22,10 @@ When you run `cfops -wr deploy` or `cfops -tf apply`, cfops loads the Bitwarden 
 
 ## Getting Started
 
-- [Setup](docs/setup.md)
-- [Usage](docs/usage.md)
-- [Pipeline](docs/pipeline.md)
-- [Cloudflare Operations Guide](docs/ops-guide.md)
+- [Install Tools](docs/installation.md)
+- [Setup Project](docs/setup.md)
+- [Usage Orientation](docs/usage-orientation.md)
+- [Usage Scenarios](docs/usage-scenarios.md)
 
 
 ## Prerequisites
@@ -46,4 +46,10 @@ When you run `cfops -wr deploy` or `cfops -tf apply`, cfops loads the Bitwarden 
 | [Wrangler](https://developers.cloudflare.com/workers/wrangler/) | Cloudflare Workers CLI | `npm:wrangler` |
 | [Terraform](https://developer.hashicorp.com/terraform) | Infrastructure provisioning | `terraform` |
 
-> All dependencies are managed via `.mise.toml` — see [Setup](docs/setup.md).
+> All dependencies are managed via `.mise.toml` — see [Installation](docs/installation.md).
+
+## cfops Development
+
+For contributors working on the cfops tool itself — releasing new versions and managing the build pipeline.
+
+- [cfops Pipeline](docs/cfops-pipeline.md)

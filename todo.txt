@@ -1,0 +1,4 @@
+ - usage link at end of docs/setup.md is incorrect
+ - improve setup#cloudflare access to mention creating cloudflare account as required
+ - token setup should make it clear what token names should be
+ - missing instructions / template for creating a worker (see https://github.com/ctracey/cloudflare-poc/blob/main/wrangler.toml) domain added later as part of dns association

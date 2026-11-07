@@ -207,7 +207,7 @@ eval "$(direnv export zsh)"
 Once the initial setup in sections 1 and 2 is complete, setting up cfops for additional projects is straightforward.
 
 ```bash
-[ -f .mise.toml ] && echo -e "\033[34m→\033[0m ACTION: .mise.toml already exists, manually update .mise config" || curl -o .mise.toml https://raw.githubusercontent.com/ctracey/cfops/main/templates/.mise.toml
+[ -f .mise.toml ] && echo -e "\033[34m→\033[0m ACTION: .mise.toml already exists, manually update .mise config" || curl -o .mise.toml https://raw.githubusercontent.com/ctracey/cfops/main/templates/mise/.mise.toml
 mise install
 cfops init
 direnv allow

@@ -6,16 +6,29 @@ use anyhow::Result;
 
 const ENVRC_FILE: &str = ".envrc";
 const GITIGNORE_FILE: &str = ".gitignore";
+const TERRAFORM_DIR: &str = "terraform";
 const NODE_MINIMUM_MAJOR_VERSION: u32 = 22;
+const CLOUDFLARE_ACCOUNT_ID_ENV: &str = "CLOUDFLARE_ACCOUNT_ID";
+
+const ENVRC_TEMPLATE: &str = include_str!("../templates/direnv/.envrc");
+const TF_MAIN: &str = include_str!("../templates/terraform/main.tf");
+const TF_OUTPUTS: &str = include_str!("../templates/terraform/outputs.tf");
+const TF_BACKEND: &str = include_str!("../templates/terraform/backend.hcl");
+const TF_VARIABLES: &str = include_str!("../templates/terraform/variables.tf");
 
 pub fn run() -> Result<()> {
+    setup_envrc()?;
+    scaffold_terraform()?;
+    Ok(())
+}
+
+fn setup_envrc() -> Result<()> {
     if Path::new(ENVRC_FILE).exists() {
-        println!(".envrc already exists — nothing to do.");
+        println!(".envrc already exists — skipping");
         return Ok(());
     }
 
     let account_name = prompt("Bitwarden machine account name: ")?;
-
     write_envrc(&account_name)?;
     println!("\x1b[32m✓\x1b[0m .envrc created");
 
@@ -34,11 +47,57 @@ pub fn run() -> Result<()> {
     Ok(())
 }
 
+fn scaffold_terraform() -> Result<()> {
+    if Path::new(TERRAFORM_DIR).exists() {
+        println!("terraform/ already exists — skipping");
+        return Ok(());
+    }
+
+    let domain = prompt("Domain (e.g. acme.com): ")?;
+
+    let derived_label = derive_resource_label(&domain);
+    let label_input = prompt(&format!("Terraform resource label [{derived_label}]: "))?;
+    let resource_label = if label_input.is_empty() {
+        derived_label
+    } else {
+        label_input
+    };
+
+    let account_id = match std::env::var(CLOUDFLARE_ACCOUNT_ID_ENV) {
+        Ok(id) if !id.is_empty() => {
+            println!("  Using CLOUDFLARE_ACCOUNT_ID from env");
+            id
+        }
+        _ => prompt("Cloudflare account ID: ")?,
+    };
+
+    fs::create_dir_all(TERRAFORM_DIR)?;
+
+    for (filename, template) in &[
+        ("main.tf", TF_MAIN),
+        ("outputs.tf", TF_OUTPUTS),
+        ("backend.hcl", TF_BACKEND),
+        ("variables.tf", TF_VARIABLES),
+    ] {
+        let content = template
+            .replace("<DOMAIN>", &domain)
+            .replace("<RESOURCE_LABEL>", &resource_label)
+            .replace("<CLOUDFLARE_ACCOUNT_ID>", &account_id);
+        fs::write(format!("{TERRAFORM_DIR}/{filename}"), content)?;
+    }
+
+    println!("\x1b[32m✓\x1b[0m terraform/ scaffolded");
+    println!("\x1b[34m→\x1b[0m Next: cfops -tf init -backend-config=terraform/backend.hcl");
+
+    Ok(())
+}
+
+fn derive_resource_label(domain: &str) -> String {
+    domain.split('.').next().unwrap_or(domain).to_string()
+}
+
 fn write_envrc(account_name: &str) -> Result<()> {
-    let content = format!(
-        "export BWS_PROFILE_NAME=bws_{account_name}\n\
-        export BWS_ACCESS_TOKEN=$(security find-generic-password -s \"$BWS_PROFILE_NAME\" -w)\n"
-    );
+    let content = ENVRC_TEMPLATE.replace("<ACCOUNT_NAME>", account_name);
     fs::write(ENVRC_FILE, content)?;
     Ok(())
 }

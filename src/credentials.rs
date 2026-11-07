@@ -43,7 +43,11 @@ pub fn parse_bash_exports(output: &str) -> HashMap<String, String> {
             let segment = segment.trim();
             let rest = segment.strip_prefix("export ")?;
             let (key, value) = rest.split_once('=')?;
-            let value = value.trim_matches('\'').trim_matches('"');
+            let value = if let Some(inner) = value.strip_prefix("$'") {
+                inner.trim_end_matches('\'')
+            } else {
+                value.trim_matches('\'').trim_matches('"')
+            };
             Some((key.to_string(), value.to_string()))
         })
         .collect()
@@ -77,6 +81,14 @@ mod tests {
 
         assert_eq!(vars.get("FOO"), Some(&"bar".to_string()));
         assert_eq!(vars.get("BAZ"), Some(&"qux".to_string()));
+    }
+
+    #[test]
+    fn parses_ansi_c_quoted_exports() {
+        let output = "export BWS_ACCESS_TOKEN=$'0.uuid.secret:key=='";
+        let vars = parse_bash_exports(output);
+
+        assert_eq!(vars.get("BWS_ACCESS_TOKEN"), Some(&"0.uuid.secret:key==".to_string()));
     }
 
     #[test]

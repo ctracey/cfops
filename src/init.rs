@@ -96,6 +96,26 @@ fn derive_resource_label(domain: &str) -> String {
     domain.split('.').next().unwrap_or(domain).to_string()
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn derive_label_strips_tld() {
+        assert_eq!(derive_resource_label("acme.com"), "acme");
+    }
+
+    #[test]
+    fn derive_label_uses_first_segment_for_subdomain() {
+        assert_eq!(derive_resource_label("sub.acme.com"), "sub");
+    }
+
+    #[test]
+    fn derive_label_returns_input_when_no_dot() {
+        assert_eq!(derive_resource_label("acme"), "acme");
+    }
+}
+
 fn write_envrc(account_name: &str) -> Result<()> {
     let content = ENVRC_TEMPLATE.replace("<ACCOUNT_NAME>", account_name);
     fs::write(ENVRC_FILE, content)?;

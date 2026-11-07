@@ -1,8 +1,8 @@
-# Cloudflare Operations Guide
+# Usage Scenarios
 
 Covers tooling, provisioning, and deployment for this project.
 
-- [1. Tooling](#1-tooling)
+- [1. Prerequisite: Tooling](#1-prerequisite-tooling)
 - [2. Provisioning](#2-provisioning)
   - [2.1 Conventions](#21-conventions)
   - [2.2 Deploy](#22-deploy)
@@ -12,7 +12,7 @@ Covers tooling, provisioning, and deployment for this project.
   - [3.1 Domain Config (Cloudflare Zone)](#31-domain-config-cloudflare-zone)
   - [3.2 Traffic Routing (Cloudflare Workers)](#32-traffic-routing-cloudflare-workers)
 
-## 1. Tooling
+## 1. Prerequisite: Tooling
 
 [cfops](https://github.com/ctracey/cfops) is the ops tool for managing Cloudflare deployments in this project. It wraps Wrangler and Terraform with credential injection via Bitwarden Secrets Manager, so credentials are never stored on disk or exported to the shell.
 

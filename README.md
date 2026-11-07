@@ -24,7 +24,6 @@ When you run `cfops -wr deploy` or `cfops -tf apply`, cfops loads the Bitwarden 
 
 - [Setup](docs/setup.md)
 - [Usage](docs/usage.md)
-- [Pipeline](docs/pipeline.md)
 - [Cloudflare Operations Guide](docs/ops-guide.md)
 
 
@@ -47,3 +46,9 @@ When you run `cfops -wr deploy` or `cfops -tf apply`, cfops loads the Bitwarden 
 | [Terraform](https://developer.hashicorp.com/terraform) | Infrastructure provisioning | `terraform` |
 
 > All dependencies are managed via `.mise.toml` — see [Setup](docs/setup.md).
+
+## cfops Development
+
+For contributors working on the cfops tool itself — releasing new versions and managing the build pipeline.
+
+- [cfops Pipeline](docs/cfops-pipeline.md)

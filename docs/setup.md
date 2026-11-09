@@ -10,16 +10,22 @@ Per-project configuration — credentials, project init, and IaC setup. Gets the
 
 Credentials are stored in Bitwarden Secrets Manager and fetched at runtime via `bws`. Access flows: Keychain → bws → Cloudflare credentials.
 
-### 1.1 Cloudflare Access
+### 1.1 Cloudflare Account
+
+If you don't already have one, create a [Cloudflare](https://cloudflare.com) account.
+
+### 1.2 Cloudflare Access
 
 **Account ID** — in the URL of any dashboard page: `dash.cloudflare.com/<account-id>/...`
 
-**API Tokens** — two tokens, each scoped to the minimum permissions for its purpose:
+**API Tokens** — create both tokens via [Dashboard → My Profile → API Tokens → Create Token](https://dash.cloudflare.com/profile/api-tokens):
 
-- **Worker provisioning token** (Wrangler): [Dashboard → My Profile → API Tokens → Create Token](https://dash.cloudflare.com/profile/api-tokens) → **Edit Cloudflare Workers** template
-- **DNS config token** (Terraform): [Dashboard → My Profile → API Tokens → Create Token](https://dash.cloudflare.com/profile/api-tokens) → **Edit zone DNS** template (see [DNS IaC Setup](dns/dns-setup.md) for required permissions)
+| Token Name | Purpose | Template | Config |
+|---|---|---|---|
+| **Worker provisioning token** | Wrangler | Edit Cloudflare Workers | template defaults are sufficient |
+| **DNS config token** | Terraform | Edit zone DNS | see [DNS IaC Setup](dns/dns-setup.md) for required permissions |
 
-### 1.2 Store Credentials (Bitwarden)
+### 1.3 Store Credentials (Bitwarden)
 
 In the [Bitwarden web app](https://vault.bitwarden.com), switch to Secrets Manager:
 
@@ -30,7 +36,7 @@ In the [Bitwarden web app](https://vault.bitwarden.com), switch to Secrets Manag
 5. Create machine account `<BWS_MACHINE_ACCOUNT_NAME>`, grant it read access to the project
 6. Generate its access token — shown once, store temporarily until added to Keychain in 1.3
 
-### 1.3 Store Machine Account Token (Keychain)
+### 1.4 Store Machine Account Token (Keychain)
 
 Add the machine account token to Keychain (the command will prompt for the token value):
 

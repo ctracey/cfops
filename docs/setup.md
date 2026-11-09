@@ -66,7 +66,7 @@ direnv allow
 
 `cfops init` prompts for:
 - Bitwarden machine account name → writes `.envrc`
-- Domain → scaffolds `terraform/` with substituted config files
+- Whether to set up DNS for a domain — if yes, prompts for domain and scaffolds `terraform/`
 
 `.envrc` is added to `.gitignore` automatically.
 

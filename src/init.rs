@@ -2,6 +2,7 @@ use std::fs;
 use std::io::{self, Write};
 use std::path::Path;
 use std::process::Command;
+use std::time::{SystemTime, UNIX_EPOCH};
 use anyhow::Result;
 
 const ENVRC_FILE: &str = ".envrc";
@@ -10,6 +11,8 @@ const TERRAFORM_DIR: &str = "terraform";
 const NODE_MINIMUM_MAJOR_VERSION: u32 = 22;
 const CLOUDFLARE_ACCOUNT_ID_ENV: &str = "CLOUDFLARE_ACCOUNT_ID";
 
+const WRANGLER_FILE: &str = "wrangler.toml";
+const WRANGLER_TEMPLATE: &str = include_str!("../templates/wrangler/static-worker/wrangler.toml");
 const ENVRC_TEMPLATE: &str = include_str!("../templates/direnv/.envrc");
 const TF_MAIN: &str = include_str!("../templates/terraform/main.tf");
 const TF_OUTPUTS: &str = include_str!("../templates/terraform/outputs.tf");
@@ -18,7 +21,12 @@ const TF_VARIABLES: &str = include_str!("../templates/terraform/variables.tf");
 
 pub fn run() -> Result<()> {
     setup_envrc()?;
-    scaffold_terraform()?;
+    if confirm("Set up a worker? [y/N]: ")? {
+        scaffold_wrangler()?;
+    }
+    if confirm("Set up DNS for a domain? [y/N]: ")? {
+        scaffold_terraform()?;
+    }
     Ok(())
 }
 
@@ -45,6 +53,54 @@ fn setup_envrc() -> Result<()> {
     println!("  HINT: test working with: cfops -wr whoami");
 
     Ok(())
+}
+
+fn scaffold_wrangler() -> Result<()> {
+    if Path::new(WRANGLER_FILE).exists() {
+        println!("wrangler.toml already exists — skipping");
+        return Ok(());
+    }
+
+    let name = prompt("Worker name (e.g. mysite-static, mysite-host): ")?;
+
+    let assets_input = prompt("Assets directory [./dist]: ")?;
+    let assets_dir = if assets_input.is_empty() {
+        "./dist".to_string()
+    } else {
+        assets_input
+    };
+
+    let content = WRANGLER_TEMPLATE
+        .replace("<WORKER_NAME>", &name)
+        .replace("<COMPATIBILITY_DATE>", &today_iso())
+        .replace("<ASSETS_DIRECTORY>", &assets_dir);
+
+    fs::write(WRANGLER_FILE, content)?;
+    println!("\x1b[32m✓\x1b[0m wrangler.toml created");
+
+    Ok(())
+}
+
+fn today_iso() -> String {
+    let days = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs()
+        / 86400;
+
+    // Civil date from days since 1970-01-01 (Hinnant's algorithm)
+    let z = days as i64 + 719468;
+    let era = (if z >= 0 { z } else { z - 146096 }) / 146097;
+    let doe = (z - era * 146097) as u64;
+    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+    let y = yoe as i64 + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let y = if m <= 2 { y + 1 } else { y };
+
+    format!("{y:04}-{m:02}-{d:02}")
 }
 
 fn scaffold_terraform() -> Result<()> {
@@ -142,6 +198,11 @@ fn gitignore_contains_envrc() -> bool {
     fs::read_to_string(GITIGNORE_FILE)
         .map(|contents| contents.lines().any(|line| line == ENVRC_FILE))
         .unwrap_or(false)
+}
+
+fn confirm(message: &str) -> Result<bool> {
+    let input = prompt(message)?;
+    Ok(matches!(input.to_lowercase().as_str(), "y" | "yes"))
 }
 
 fn prompt(message: &str) -> Result<String> {

@@ -72,4 +72,4 @@ cfops -wr whoami
 
 ## 4. Setup Complete
 
-cfops is now setup and ready for use. Next step is to follow the [usage guide](usage.md).
+cfops is now setup and ready for use. Next step is to follow the [usage guide](usage-orientation.md).

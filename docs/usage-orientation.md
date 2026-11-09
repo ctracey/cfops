@@ -1,6 +1,6 @@
 # Usage Orientation
 
-High-level orientation to cfops — how credential injection works, the environment and account model, and what switching environments looks like in practice. For step-by-step operations, go directly to [Run Operations](usage-scenarios.md).
+High-level orientation to cfops — how credential injection works, the environment and account model, and what switching environments looks like in practice. For step-by-step operations, go directly to [Usage Scenarios](usage-scenarios.md).
 
 - [1. Operations](#1-operations)
 - [2. Environments](#2-environments)

@@ -33,8 +33,9 @@ In the [Bitwarden web app](https://vault.bitwarden.com), switch to Secrets Manag
 2. Add secret `CLOUDFLARE_WORKER_PROVISION_TOKEN`
 3. Add secret `CLOUDFLARE_DNS_CONFIG_TOKEN`
 4. Add secret `CLOUDFLARE_ACCOUNT_ID`
-5. Create machine account `<BWS_MACHINE_ACCOUNT_NAME>`, grant it read access to the project
-6. Generate its access token — shown once, store temporarily until added to Keychain in 1.3
+5. Create machine account `<BWS_MACHINE_ACCOUNT_NAME>` (e.g username-devicename-YYYY)
+6. Grant the machine account read access to `<BITWARDEN_PROJECT_NAME>`
+7. Generate an access token for the machine account with a 1 year expiration (shown once, store temporarily until added to Keychain in 1.4)
 
 ### 1.4 Store Machine Account Token (Keychain)
 

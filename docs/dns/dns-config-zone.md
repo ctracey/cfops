@@ -11,6 +11,7 @@ Terraform manages all DNS configuration for `<DOMAIN>`, eliminating clickops whe
   - [3.1 Retrieve Cloudflare nameservers](#31-retrieve-cloudflare-nameservers)
   - [3.2 Update nameservers at registrar](#32-update-nameservers-at-registrar)
   - [3.3 Verify](#33-verify)
+- [4. Narrow DNS Token Scope](#4-narrow-dns-token-scope)
 
 ## 1. Prerequisite: DNS IaC Setup
 
@@ -97,3 +98,12 @@ dig NS <DOMAIN>
 ```
 
 The zone becomes active in Cloudflare once it detects the delegation.
+
+## 4. Narrow DNS Token Scope
+
+Now that `<DOMAIN>` exists as a Cloudflare zone, narrow the DNS token from "All zones from account" to this specific zone.
+
+1. Find the `DNS config token (<DOMAIN>)` token ([Dashboard → My Profile → API Tokens](https://dash.cloudflare.com/profile/api-tokens))
+2. Edit the token
+3. Under **Zone Resources**, change the zone policy from **All zones from account** to **Specific zone** and select `<DOMAIN>`
+4. Save the token

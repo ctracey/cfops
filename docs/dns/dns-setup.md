@@ -17,18 +17,20 @@ A guide to setting up Terraform as the Infrastructure as Code tool for managing 
 
 ## 2. Setup Cloudflare Token for DNS Config
 
-Create a token from the **Edit zone DNS** template, then add Transform Rules.
+Here we configure the DNS token for your domain — scoping it to the correct zone and adding the permissions Terraform needs.
 
-[Dashboard → My Profile → API Tokens → Create Token → Edit zone DNS](https://dash.cloudflare.com/profile/api-tokens)
+1. Find the `DNS config token (<DOMAIN>)` token created in [setup 1.2](../setup.md#12-cloudflare-access) ([Dashboard → My Profile → API Tokens](https://dash.cloudflare.com/profile/api-tokens))
+2. Edit the token — within the zone policy section, expand each group and enable the following permissions:
 
-1. Select the **Edit zone DNS** template — this pre-populates zone creation and DNS permissions
-2. Add **Zone → Zone → Edit** — required to create new zones
-3. Add **Zone → Single Redirect → Edit** — required for the www redirect ruleset
-4. Set scope to **All zones**
-5. Name the token `DNS Config (<DOMAIN>)`
-6. Create the token and copy the value — shown once
+   | Group | Permission | Access |
+   |---|---|---|
+   | DNS & Zones | DNS | Edit (pre-set by template) |
+   | DNS & Zones | Zone | Edit |
+   | Rules & Configuration | Single Redirect | Edit |
 
-Store in Bitwarden under the prod machine account as `CLOUDFLARE_DNS_CONFIG_TOKEN`.
+3. Click **Continue to summary** then **Update token**
+
+> **Note:** The token value does not change when editing permissions — no need to update Bitwarden. `CLOUDFLARE_DNS_CONFIG_TOKEN` was already stored in setup [1.3](../setup.md#13-store-credentials-bitwarden).
 
 ## 3. Enable Terraform state persistence
 

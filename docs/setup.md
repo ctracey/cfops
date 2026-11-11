@@ -23,7 +23,7 @@ If you don't already have one, create a [Cloudflare](https://cloudflare.com) acc
 | Token Name | Purpose | Template | Expiration | Account policy | Zone policy | Config |
 |---|---|---|---|---|---|---|
 | **Worker provisioning token** | Wrangler | Edit Cloudflare Workers | 1 year | Select account | All zones from account | template defaults are sufficient |
-| **DNS config token** | Terraform | Edit zone DNS | 1 year | N/A | All zones from account | see [DNS IaC Setup](dns/dns-setup.md) for required permissions |
+| **DNS config token (`<DOMAIN>`)** | Terraform | Edit zone DNS | 1 year | N/A | All zones from account | see [DNS IaC Setup](dns/dns-setup.md) for required permissions |
 
 ### 1.3 Store Credentials (Bitwarden)
 

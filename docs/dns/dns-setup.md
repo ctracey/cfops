@@ -44,12 +44,18 @@ R2 is Cloudflare's object storage — used here for Terraform state and future a
 
 Cloudflare requires manual account-level activation before any R2 operations will work. May prompt for a payment method even on the free tier.
 
+> **Note:** Once R2 is activated, the **Create bucket** option will appear in the R2 Object Storage dashboard.
+
 ### 3.2 Create Terraform state bucket
 
-> **Prerequisite:** The `Worker Provision (all)` token must have R2 bucket admin permissions — verify this in the Cloudflare dashboard under **My Profile → API Tokens** before running the command. See cfops setup docs for how this token should be configured.
+> **Prerequisite:** The `Worker provisioning token` created in [setup 1.2](../setup.md#12-cloudflare-access) must have R2 bucket admin permissions.
+>
+> The token should be correctly configured from the template — optionally verify by checking **Account policy → Workers R2 Storage → Edit** is enabled ([Dashboard → My Profile → API Tokens](https://dash.cloudflare.com/profile/api-tokens)).
+
+Create the R2 bucket that Terraform will use to store state:
 
 ```bash
-cfops -wr r2 bucket create <RESOURCE_LABEL>-terraform-state
+cfops -wr r2 bucket create <DOMAIN>-terraform-state
 ```
 
 Must exist before `terraform init` can run.

@@ -3,8 +3,8 @@
 Per-project configuration — credentials, project init, and IaC setup. Gets the project to a ready state for [usage](usage.md).
 
 - [1. Credentials](#1-credentials)
-- [2. DNS IaC Setup](#2-dns-iac-setup)
-- [3. Project Init](#3-project-init)
+- [2. Project Init](#2-project-init)
+- [3. DNS IaC Setup](#3-dns-iac-setup)
 
 ## 1. Credentials
 
@@ -54,11 +54,7 @@ Then configure access control so every read requires your macOS password:
 5. In **"Always allow access by these applications"**, select `security` and remove it
 6. Save Changes
 
-## 2. DNS IaC Setup
-
-If you're going to use cfops for DNS config, set up DNS IaC by following the [DNS Setup Guide](dns/dns-setup.md).
-
-## 3. Project Init
+## 2. Project Init
 
 Run `cfops init` to scaffold the project:
 
@@ -69,15 +65,20 @@ direnv allow
 
 `cfops init` prompts for:
 - Bitwarden machine account name → writes `.envrc`
+- Whether to set up a worker — if yes, prompts for worker name and scaffolds `wrangler.toml`
 - Whether to set up DNS for a domain — if yes, prompts for domain and scaffolds `terraform/`
 
-`.envrc` is added to `.gitignore` automatically.
+> **Note:** `.envrc` is added to `.gitignore` automatically. If DNS is configured, Terraform-related entries (`terraform/backend.hcl`, `.terraform/`, state files) are also added following standard Terraform conventions.
 
 Verify credentials are working:
 
 ```bash
 cfops -wr whoami
 ```
+
+## 3. DNS IaC Setup
+
+If you're going to use cfops for DNS config, set up DNS IaC by following the [DNS Setup Guide](dns/dns-setup.md).
 
 ## 4. Setup Complete
 

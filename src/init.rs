@@ -5,9 +5,17 @@ use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 use anyhow::Result;
 
+use crate::bws;
+use crate::credentials::BwsToken;
+
 const ENVRC_FILE: &str = ".envrc";
 const GITIGNORE_FILE: &str = ".gitignore";
 const TERRAFORM_DIR: &str = "terraform";
+const TF_BACKEND_FILE: &str = "terraform/backend.hcl";
+const TF_LOCAL_DIR: &str = ".terraform";
+const TF_STATE_GLOB: &str = "*.tfstate";
+const TF_STATE_BACKUP_GLOB: &str = "*.tfstate.backup";
+const TF_LOCK_FILE: &str = ".terraform.lock.hcl";
 const NODE_MINIMUM_MAJOR_VERSION: u32 = 22;
 const CLOUDFLARE_ACCOUNT_ID_ENV: &str = "CLOUDFLARE_ACCOUNT_ID";
 
@@ -20,39 +28,62 @@ const TF_BACKEND: &str = include_str!("../templates/terraform/backend.hcl");
 const TF_VARIABLES: &str = include_str!("../templates/terraform/variables.tf");
 
 pub fn run() -> Result<()> {
-    setup_envrc()?;
+    let mut actions: Vec<String> = Vec::new();
+
+    section("Account setup");
+    let account_name = setup_envrc()?;
+    if account_name.is_some() {
+        actions.push("run 'direnv allow' to activate".to_string());
+        if let Some(msg) = node_version_warning() {
+            actions.push(msg);
+        }
+        actions.push("verify credentials: cfops -wr whoami — you should see a Keychain password prompt".to_string());
+    }
+
+    section("Worker setup");
     if confirm("Set up a worker? [y/N]: ")? {
         scaffold_wrangler()?;
     }
+
+    section("DNS setup");
     if confirm("Set up DNS for a domain? [y/N]: ")? {
-        scaffold_terraform()?;
+        scaffold_terraform(account_name.as_deref())?;
     }
+
+    if !actions.is_empty() {
+        println!("\n\x1b[2m────────────────────────────────────\x1b[0m");
+        println!("Setup almost complete\n");
+        println!("\x1b[1mSETUP ACTIONS:\x1b[0m");
+        for action in &actions {
+            println!("  \x1b[33m⚠  {action}\x1b[0m");
+        }
+    }
+
+    println!("\n\x1b[1mNEXT STEPS:\x1b[0m");
+    println!("  \x1b[36mSee the usage scenarios guide for worker and Terraform provisioning:\x1b[0m");
+    println!("  \x1b[36mhttps://github.com/ctracey/cfops/blob/main/docs/usage-scenarios.md\x1b[0m");
+
     Ok(())
 }
 
-fn setup_envrc() -> Result<()> {
+fn section(title: &str) {
+    println!("\n\x1b[1m{title}\x1b[0m");
+}
+
+fn setup_envrc() -> Result<Option<String>> {
     if Path::new(ENVRC_FILE).exists() {
         println!(".envrc already exists — skipping");
-        return Ok(());
+        return Ok(None);
     }
 
     let account_name = prompt("Bitwarden machine account name: ")?;
+    println!("Initialising account config...");
     write_envrc(&account_name)?;
     println!("\x1b[32m✓\x1b[0m .envrc created");
 
-    ensure_gitignore_entry()?;
+    ensure_gitignore_entries("direnv", &[ENVRC_FILE])?;
 
-    println!(
-        "\x1b[34m→\x1b[0m ACTION: run 'direnv allow' to activate. \
-        (HINT: this will attempt to read BWS_ACCESS_TOKEN from Keychain \
-        — if configured you should see a password prompt)"
-    );
-
-    warn_if_node_too_old();
-
-    println!("  HINT: test working with: cfops -wr whoami");
-
-    Ok(())
+    Ok(Some(account_name))
 }
 
 fn scaffold_wrangler() -> Result<()> {
@@ -70,6 +101,7 @@ fn scaffold_wrangler() -> Result<()> {
         assets_input
     };
 
+    println!("Initialising worker config...");
     let content = WRANGLER_TEMPLATE
         .replace("<WORKER_NAME>", &name)
         .replace("<COMPATIBILITY_DATE>", &today_iso())
@@ -103,7 +135,7 @@ fn today_iso() -> String {
     format!("{y:04}-{m:02}-{d:02}")
 }
 
-fn scaffold_terraform() -> Result<()> {
+fn scaffold_terraform(account_name: Option<&str>) -> Result<()> {
     if Path::new(TERRAFORM_DIR).exists() {
         println!("terraform/ already exists — skipping");
         return Ok(());
@@ -119,13 +151,8 @@ fn scaffold_terraform() -> Result<()> {
         label_input
     };
 
-    let account_id = match std::env::var(CLOUDFLARE_ACCOUNT_ID_ENV) {
-        Ok(id) if !id.is_empty() => {
-            println!("  Using CLOUDFLARE_ACCOUNT_ID from env");
-            id
-        }
-        _ => prompt("Cloudflare account ID: ")?,
-    };
+    println!("Initialising DNS config...");
+    let account_id = resolve_account_id(account_name)?;
 
     fs::create_dir_all(TERRAFORM_DIR)?;
 
@@ -142,10 +169,54 @@ fn scaffold_terraform() -> Result<()> {
         fs::write(format!("{TERRAFORM_DIR}/{filename}"), content)?;
     }
 
+    ensure_gitignore_entries("terraform", &[
+        TF_BACKEND_FILE,
+        TF_LOCAL_DIR,
+        TF_STATE_GLOB,
+        TF_STATE_BACKUP_GLOB,
+        TF_LOCK_FILE,
+    ])?;
+
     println!("\x1b[32m✓\x1b[0m terraform/ scaffolded");
-    println!("\x1b[34m→\x1b[0m Next: cfops -tf init -backend-config=terraform/backend.hcl");
 
     Ok(())
+}
+
+fn resolve_account_id(account_name: Option<&str>) -> Result<String> {
+    if let Some(name) = account_name {
+        if let Ok(id) = fetch_account_id_from_keychain(name) {
+            println!("\x1b[32m✓\x1b[0m CLOUDFLARE_ACCOUNT_ID fetched from Bitwarden");
+            return Ok(id);
+        }
+    }
+
+    if let Some(id) = std::env::var(CLOUDFLARE_ACCOUNT_ID_ENV).ok().filter(|v| !v.is_empty()) {
+        println!("  Using CLOUDFLARE_ACCOUNT_ID from env");
+        return Ok(id);
+    }
+
+    if let Ok(token) = crate::credentials::load() {
+        if let Ok(id) = bws::get_secret(&token, CLOUDFLARE_ACCOUNT_ID_ENV) {
+            println!("\x1b[32m✓\x1b[0m CLOUDFLARE_ACCOUNT_ID fetched from Bitwarden");
+            return Ok(id);
+        }
+    }
+
+    prompt("Cloudflare account ID: ")
+}
+
+fn fetch_account_id_from_keychain(account_name: &str) -> Result<String> {
+    let keychain_service = format!("bws_{account_name}");
+    let output = Command::new("security")
+        .args(["find-generic-password", "-s", &keychain_service, "-w"])
+        .output()?;
+
+    if !output.status.success() {
+        anyhow::bail!("keychain entry '{keychain_service}' not found");
+    }
+
+    let token_value = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    bws::get_secret(&BwsToken(token_value), CLOUDFLARE_ACCOUNT_ID_ENV)
 }
 
 fn derive_resource_label(domain: &str) -> String {
@@ -178,8 +249,9 @@ fn write_envrc(account_name: &str) -> Result<()> {
     Ok(())
 }
 
-fn ensure_gitignore_entry() -> Result<()> {
-    if gitignore_contains_envrc() {
+fn ensure_gitignore_entries(comment: &str, paths: &[&str]) -> Result<()> {
+    let missing: Vec<&str> = paths.iter().copied().filter(|p| !gitignore_contains(p)).collect();
+    if missing.is_empty() {
         return Ok(());
     }
 
@@ -188,15 +260,18 @@ fn ensure_gitignore_entry() -> Result<()> {
         .create(true)
         .open(GITIGNORE_FILE)?;
 
-    writeln!(file, "{ENVRC_FILE}")?;
-    println!("\x1b[32m✓\x1b[0m .envrc added to .gitignore");
+    writeln!(file, "\n# {comment}")?;
+    for path in &missing {
+        writeln!(file, "{path}")?;
+        println!("\x1b[32m✓\x1b[0m {path} added to .gitignore");
+    }
 
     Ok(())
 }
 
-fn gitignore_contains_envrc() -> bool {
+fn gitignore_contains(path: &str) -> bool {
     fs::read_to_string(GITIGNORE_FILE)
-        .map(|contents| contents.lines().any(|line| line == ENVRC_FILE))
+        .map(|contents| contents.lines().any(|line| line == path))
         .unwrap_or(false)
 }
 
@@ -215,11 +290,8 @@ fn prompt(message: &str) -> Result<String> {
     Ok(input.trim().to_string())
 }
 
-fn warn_if_node_too_old() {
-    let Ok(output) = Command::new("node").arg("--version").output() else {
-        return;
-    };
-
+fn node_version_warning() -> Option<String> {
+    let output = Command::new("node").arg("--version").output().ok()?;
     let version_str = String::from_utf8_lossy(&output.stdout);
     let version_str = version_str.trim().trim_start_matches('v');
 
@@ -230,9 +302,10 @@ fn warn_if_node_too_old() {
         .unwrap_or(0);
 
     if major < NODE_MINIMUM_MAJOR_VERSION {
-        println!(
-            "\x1b[34m→\x1b[0m ACTION: node version is v{version_str} \
-            — wrangler requires node {NODE_MINIMUM_MAJOR_VERSION} or higher."
-        );
+        Some(format!(
+            "node v{version_str} is below the required v{NODE_MINIMUM_MAJOR_VERSION} — upgrade node before using wrangler"
+        ))
+    } else {
+        None
     }
 }

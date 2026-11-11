@@ -37,20 +37,22 @@ In the [Bitwarden web app](https://vault.bitwarden.com), switch to Secrets Manag
 6. Grant the machine account read access to `<BITWARDEN_PROJECT_NAME>`
 7. Generate an access token for the machine account with a 1 year expiration (shown once, store temporarily until added to Keychain in 1.4)
 
-### 1.4 Store Machine Account Token (Keychain)
+### 1.4 Store Machine Account Token (macOS Keychain)
 
-Add the machine account token to Keychain (the command will prompt for the token value):
+Add the machine account token to macOS Keychain (the command will prompt for the token value):
 
 ```bash
-security add-generic-password -a "$USER" -s "bws_<BWS_MACHINE_ACCOUNT_NAME>" -w
+security add-generic-password -a "$USER" -s "bws_<BWS_MACHINE_ACCOUNT_NAME>" -p "<TOKEN_VALUE>"
 ```
 
 Then configure access control so every read requires your macOS password:
 
-1. Keychain Access → right-click `bws_<BWS_MACHINE_ACCOUNT_NAME>` → Get Info → Access Control
-2. Check **"Confirm before allowing access"**
-3. In **"Always allow access by these applications"**, select `security` and remove it
-4. Save Changes
+1. Open the macOS Keychain Access application
+2. Find `bws_<BWS_MACHINE_ACCOUNT_NAME>`
+3. Right-click → Get Info → Access Control
+4. Check **"Confirm before allowing access"**
+5. In **"Always allow access by these applications"**, select `security` and remove it
+6. Save Changes
 
 ## 2. DNS IaC Setup
 

@@ -4,6 +4,9 @@ Per-project configuration — credentials, project init, and IaC setup. Gets the
 
 - [1. Credentials](#1-credentials)
 - [2. Project Init](#2-project-init)
+  - [2.1 Run Init](#21-run-init)
+  - [2.2 Setup Actions](#22-setup-actions)
+  - [2.3 Verify](#23-verify)
 - [3. DNS IaC Setup](#3-dns-iac-setup)
 
 ## 1. Credentials
@@ -56,11 +59,12 @@ Then configure access control so every read requires your macOS password:
 
 ## 2. Project Init
 
-Run `cfops init` to scaffold the project:
+Scaffolds the project config files and wires up credentials for the current directory.
+
+### 2.1 Run Init
 
 ```bash
 cfops init
-direnv allow
 ```
 
 `cfops init` prompts for:
@@ -69,6 +73,12 @@ direnv allow
 - Whether to set up DNS for a domain — if yes, prompts for domain and scaffolds `terraform/`
 
 > **Note:** `.envrc` is added to `.gitignore` automatically. If DNS is configured, Terraform-related entries (`terraform/backend.hcl`, `.terraform/`, state files) are also added following standard Terraform conventions.
+
+### 2.2 Setup Actions
+
+Check the init output for any **SETUP ACTIONS** listed at the end — these may include steps such as running `direnv allow` or a node version requirement that must be resolved before proceeding.
+
+### 2.3 Verify
 
 Verify credentials are working:
 

@@ -3,23 +3,32 @@
 Per-project configuration — credentials, project init, and IaC setup. Gets the project to a ready state for [usage](usage.md).
 
 - [1. Credentials](#1-credentials)
-- [2. DNS IaC Setup](#2-dns-iac-setup)
-- [3. Project Init](#3-project-init)
+- [2. Project Init](#2-project-init)
+  - [2.1 Run Init](#21-run-init)
+  - [2.2 Setup Actions](#22-setup-actions)
+  - [2.3 Verify](#23-verify)
+- [3. DNS IaC Setup](#3-dns-iac-setup)
 
 ## 1. Credentials
 
 Credentials are stored in Bitwarden Secrets Manager and fetched at runtime via `bws`. Access flows: Keychain → bws → Cloudflare credentials.
 
-### 1.1 Cloudflare Access
+### 1.1 Cloudflare Account
+
+If you don't already have one, create a [Cloudflare](https://cloudflare.com) account.
+
+### 1.2 Cloudflare Access
 
 **Account ID** — in the URL of any dashboard page: `dash.cloudflare.com/<account-id>/...`
 
-**API Tokens** — two tokens, each scoped to the minimum permissions for its purpose:
+**API Tokens** — create both tokens via [Dashboard → My Profile → API Tokens → Create Token](https://dash.cloudflare.com/profile/api-tokens):
 
-- **Worker provisioning token** (Wrangler): [Dashboard → My Profile → API Tokens → Create Token](https://dash.cloudflare.com/profile/api-tokens) → **Edit Cloudflare Workers** template
-- **DNS config token** (Terraform): [Dashboard → My Profile → API Tokens → Create Token](https://dash.cloudflare.com/profile/api-tokens) → **Edit zone DNS** template (see [DNS IaC Setup](dns/dns-setup.md) for required permissions)
+| Token Name | Purpose | Template | Expiration | Account policy | Zone policy | Config |
+|---|---|---|---|---|---|---|
+| **Worker provisioning token** | Wrangler | Edit Cloudflare Workers | 1 year | Select account | All zones from account | template defaults are sufficient |
+| **DNS config token (`<DOMAIN>`)** | Terraform | Edit zone DNS | 1 year | N/A | All zones from account | see [DNS IaC Setup](dns/dns-setup.md) for required permissions |
 
-### 1.2 Store Credentials (Bitwarden)
+### 1.3 Store Credentials (Bitwarden)
 
 In the [Bitwarden web app](https://vault.bitwarden.com), switch to Secrets Manager:
 
@@ -27,42 +36,49 @@ In the [Bitwarden web app](https://vault.bitwarden.com), switch to Secrets Manag
 2. Add secret `CLOUDFLARE_WORKER_PROVISION_TOKEN`
 3. Add secret `CLOUDFLARE_DNS_CONFIG_TOKEN`
 4. Add secret `CLOUDFLARE_ACCOUNT_ID`
-5. Create machine account `<BWS_MACHINE_ACCOUNT_NAME>`, grant it read access to the project
-6. Generate its access token — shown once, store temporarily until added to Keychain in 1.3
+5. Create machine account `<BWS_MACHINE_ACCOUNT_NAME>` (e.g username-devicename-YYYY)
+6. Grant the machine account read access to `<BITWARDEN_PROJECT_NAME>`
+7. Generate an access token for the machine account with a 1 year expiration (shown once, store temporarily until added to Keychain in 1.4)
 
-### 1.3 Store Machine Account Token (Keychain)
+### 1.4 Store Machine Account Token (macOS Keychain)
 
-Add the machine account token to Keychain (the command will prompt for the token value):
+Add the machine account token to macOS Keychain (the command will prompt for the token value):
 
 ```bash
-security add-generic-password -a "$USER" -s "bws_<BWS_MACHINE_ACCOUNT_NAME>" -w
+security add-generic-password -a "$USER" -s "bws_<BWS_MACHINE_ACCOUNT_NAME>" -p "<TOKEN_VALUE>"
 ```
 
 Then configure access control so every read requires your macOS password:
 
-1. Keychain Access → right-click `bws_<BWS_MACHINE_ACCOUNT_NAME>` → Get Info → Access Control
-2. Check **"Confirm before allowing access"**
-3. In **"Always allow access by these applications"**, select `security` and remove it
-4. Save Changes
+1. Open the macOS Keychain Access application
+2. Find `bws_<BWS_MACHINE_ACCOUNT_NAME>`
+3. Right-click → Get Info → Access Control
+4. Check **"Confirm before allowing access"**
+5. In **"Always allow access by these applications"**, select `security` and remove it
+6. Save Changes
 
-## 2. DNS IaC Setup
+## 2. Project Init
 
-If you're going to use cfops for DNS config, set up DNS IaC by following the [DNS Setup Guide](dns/dns-setup.md).
+Scaffolds the project config files and wires up credentials for the current directory.
 
-## 3. Project Init
-
-Run `cfops init` to scaffold the project:
+### 2.1 Run Init
 
 ```bash
 cfops init
-direnv allow
 ```
 
 `cfops init` prompts for:
 - Bitwarden machine account name → writes `.envrc`
-- Domain → scaffolds `terraform/` with substituted config files
+- Whether to set up a worker — if yes, prompts for worker name and scaffolds `wrangler.toml`
+- Whether to set up DNS for a domain — if yes, prompts for domain and scaffolds `terraform/`
 
-`.envrc` is added to `.gitignore` automatically.
+> **Note:** `.envrc` is added to `.gitignore` automatically. If DNS is configured, Terraform-related entries (`terraform/backend.hcl`, `.terraform/`, state files) are also added following standard Terraform conventions.
+
+### 2.2 Setup Actions
+
+Check the init output for any **SETUP ACTIONS** listed at the end — these may include steps such as running `direnv allow` or a node version requirement that must be resolved before proceeding.
+
+### 2.3 Verify
 
 Verify credentials are working:
 
@@ -70,6 +86,10 @@ Verify credentials are working:
 cfops -wr whoami
 ```
 
+## 3. DNS IaC Setup
+
+If you're going to use cfops for DNS config, set up DNS IaC by following the [DNS Setup Guide](dns/dns-setup.md).
+
 ## 4. Setup Complete
 
-cfops is now setup and ready for use. Next step is to follow the [usage guide](usage.md).
+cfops is now setup and ready for use. Next step is to follow the [usage guide](usage-orientation.md).

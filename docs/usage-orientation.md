@@ -1,6 +1,6 @@
 # Usage Orientation
 
-High-level orientation to cfops — how credential injection works, the environment and account model, and what switching environments looks like in practice. For step-by-step operations, go directly to [Run Operations](usage-scenarios.md).
+High-level orientation to cfops — how credential injection works, the environment and account model, and what switching environments looks like in practice. For step-by-step operations, go directly to [Usage Scenarios](usage-scenarios.md).
 
 - [1. Operations](#1-operations)
 - [2. Environments](#2-environments)
@@ -21,11 +21,12 @@ Follow the [ops guide](usage-scenarios.md) for practical examples for worker pro
 `cfops` injects Cloudflare credentials from Bitwarden before delegating to Wrangler. Credentials are never stored on disk or exported to the shell.
 
 ```bash
-cfops deploy                      # Deploy the worker
-cfops delete                      # Delete the worker (prompts for confirmation)
+cfops worker --deploy             # Deploy the worker
+cfops worker --delete             # Delete the worker (prompts for confirmation)
+cfops worker --list               # Open Workers & Pages dashboard
+cfops worker --attach <DOMAIN>    # Attach a custom domain to the worker
 cfops -wr whoami                  # Verify authenticated account
 cfops -wr deployments status      # Any other Wrangler command
-cfops list                        # Open Workers & Pages dashboard
 cfops -wr -h                      # Full Wrangler help — cfops is a full delegation
 ```
 
@@ -36,7 +37,8 @@ cfops -wr -h                      # Full Wrangler help — cfops is a full deleg
 `cfops` injects Cloudflare credentials and R2 state backend credentials before delegating to Terraform.
 
 ```bash
-cfops -tf init -backend-config=terraform/backend.hcl
+cd terraform
+cfops -tf init -backend-config=./backend.hcl
 cfops -tf plan
 cfops -tf apply
 cfops -tf -h                      # Full Terraform help — cfops is a full delegation

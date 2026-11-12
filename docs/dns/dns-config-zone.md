@@ -11,6 +11,8 @@ Terraform manages all DNS configuration for `<DOMAIN>`, eliminating clickops whe
   - [3.1 Retrieve Cloudflare nameservers](#31-retrieve-cloudflare-nameservers)
   - [3.2 Update nameservers at registrar](#32-update-nameservers-at-registrar)
   - [3.3 Verify](#33-verify)
+- [4. Narrow DNS Token Scope](#4-narrow-dns-token-scope)
+- [5. Zone setup complete](#5-zone-setup-complete)
 
 ## 1. Prerequisite: DNS IaC Setup
 
@@ -61,7 +63,8 @@ resource "cloudflare_ruleset" "www_redirect" {
 ### 2.3 Apply config
 
 ```bash
-cfops -tf init -backend-config=terraform/backend.hcl
+cd terraform
+cfops -tf init -backend-config=./backend.hcl
 cfops -tf plan
 cfops -tf apply
 ```
@@ -75,6 +78,7 @@ Terraform creates the `<DOMAIN>` zone and outputs the two assigned Cloudflare na
 To retrieve the assigned nameservers at any time:
 
 ```bash
+cd terraform
 cfops -tf output
 ```
 
@@ -97,3 +101,21 @@ dig NS <DOMAIN>
 ```
 
 The zone becomes active in Cloudflare once it detects the delegation.
+
+## 4. Narrow DNS Token Scope
+
+Now that `<DOMAIN>` exists as a Cloudflare zone, narrow the DNS token from "All zones from account" to this specific zone.
+
+1. Find the `DNS config token (<DOMAIN>)` token ([Dashboard → My Profile → API Tokens](https://dash.cloudflare.com/profile/api-tokens))
+2. Edit the token
+3. Under **Zone policy**, deselect the account — **Specific zone** is not selectable until the account is removed
+4. Change from **All zones from account** to **Specific zone** and select `<DOMAIN>`
+5. Click **Continue to summary** then **Update token**
+
+## 5. Zone setup complete
+
+The `<DOMAIN>` zone is now provisioned in Cloudflare with DNS records and nameserver delegation in place.
+
+> **Note:** Nothing will be rendered until a worker is attached to the domain. If you have existing workers, they will not serve traffic on `<DOMAIN>` until they are explicitly attached.
+
+**Next: [Attach a worker to the domain →](./dns-config-worker.md)**

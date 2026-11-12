@@ -5,9 +5,10 @@ pub enum Command {
     Help,
     Version,
     Init,
-    List,
-    Deploy,
-    Delete,
+    WorkerDeploy,
+    WorkerDelete,
+    WorkerList,
+    WorkerAttach(String),
     Wrangler(Vec<String>),
     Terraform(Vec<String>),
 }
@@ -17,11 +18,19 @@ pub fn parse_args(args: &[String]) -> Option<Command> {
         Some("-h" | "--help") => Some(Command::Help),
         Some("-v" | "--version") => Some(Command::Version),
         Some("init") => Some(Command::Init),
-        Some("list") => Some(Command::List),
-        Some("deploy") => Some(Command::Deploy),
-        Some("delete") => Some(Command::Delete),
+        Some("worker") => parse_worker_subcommand(&args[1..]),
         Some("-wr" | "--wrangler") => Some(Command::Wrangler(args[1..].to_vec())),
         Some("-tf" | "--terraform") => Some(Command::Terraform(args[1..].to_vec())),
+        _ => None,
+    }
+}
+
+fn parse_worker_subcommand(args: &[String]) -> Option<Command> {
+    match args.first().map(String::as_str) {
+        Some("--deploy") => Some(Command::WorkerDeploy),
+        Some("--delete") => Some(Command::WorkerDelete),
+        Some("--list") => Some(Command::WorkerList),
+        Some("--attach") => args.get(1).map(|d| Command::WorkerAttach(d.clone())),
         _ => None,
     }
 }
@@ -35,18 +44,20 @@ pub fn help_text() -> String {
         String::new(),
         "\x1b[1mCommands:\x1b[0m".to_string(),
         "  init                     Initialise .envrc for the current project".to_string(),
-        "  list                     Open Workers & Pages dashboard for the active account".to_string(),
-        "  deploy                   Deploy the worker (shorthand for -wr deploy)".to_string(),
-        "  delete                   Delete the worker (shorthand for -wr delete)".to_string(),
+        "  worker --deploy          Deploy the worker".to_string(),
+        "  worker --delete          Delete the worker (prompts for confirmation)".to_string(),
+        "  worker --list            Open Workers & Pages dashboard for the active account".to_string(),
+        "  worker --attach <DOMAIN> Attach a custom domain to the worker via wrangler.toml".to_string(),
         "  -wr, --wrangler <args>   Run any Wrangler command with credentials injected".to_string(),
         "  -tf, --terraform <args>  Run any Terraform command with credentials injected".to_string(),
         "  -v                       Show version".to_string(),
         "  -h                       Show this help".to_string(),
         String::new(),
         "\x1b[1mExamples:\x1b[0m".to_string(),
-        "  cfops deploy".to_string(),
-        "  cfops delete".to_string(),
-        "  cfops list".to_string(),
+        "  cfops worker --deploy".to_string(),
+        "  cfops worker --delete".to_string(),
+        "  cfops worker --list".to_string(),
+        "  cfops worker --attach tracerview.com".to_string(),
         "  cfops -wr deployments status".to_string(),
         "  cfops -tf plan".to_string(),
     ]
@@ -75,6 +86,36 @@ mod tests {
     #[test]
     fn parses_init() {
         assert_eq!(parse_args(&["init".to_string()]), Some(Command::Init));
+    }
+
+    #[test]
+    fn parses_worker_deploy() {
+        let args = vec!["worker".to_string(), "--deploy".to_string()];
+        assert_eq!(parse_args(&args), Some(Command::WorkerDeploy));
+    }
+
+    #[test]
+    fn parses_worker_delete() {
+        let args = vec!["worker".to_string(), "--delete".to_string()];
+        assert_eq!(parse_args(&args), Some(Command::WorkerDelete));
+    }
+
+    #[test]
+    fn parses_worker_list() {
+        let args = vec!["worker".to_string(), "--list".to_string()];
+        assert_eq!(parse_args(&args), Some(Command::WorkerList));
+    }
+
+    #[test]
+    fn parses_worker_attach() {
+        let args = vec!["worker".to_string(), "--attach".to_string(), "example.com".to_string()];
+        assert_eq!(parse_args(&args), Some(Command::WorkerAttach("example.com".to_string())));
+    }
+
+    #[test]
+    fn worker_attach_missing_domain_returns_none() {
+        let args = vec!["worker".to_string(), "--attach".to_string()];
+        assert_eq!(parse_args(&args), None);
     }
 
     #[test]
@@ -142,7 +183,7 @@ mod tests {
     #[test]
     fn help_text_contains_all_commands() {
         let text = help_text();
-        for expected in &["init", "deploy", "delete", "list", "-wr", "--wrangler", "-tf", "--terraform"] {
+        for expected in &["init", "--deploy", "--delete", "--list", "--attach", "-wr", "--wrangler", "-tf", "--terraform"] {
             assert!(text.contains(expected), "help text missing: {expected}");
         }
     }

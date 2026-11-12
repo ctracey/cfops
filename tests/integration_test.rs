@@ -108,11 +108,11 @@ fn unknown_command_produces_no_stdout() {
 fn init_creates_envrc_and_gitignore_entry() {
     let dir = TempDir::new().unwrap();
 
-    // stdin: account name, domain, empty (accept derived label), account ID
+    // stdin: account name, n (skip worker), n (skip dns)
     cfops()
         .arg("init")
         .current_dir(dir.path())
-        .write_stdin("myaccount\nacme.com\n\naccount123\n")
+        .write_stdin("myaccount\nn\nn\n")
         .assert()
         .success()
         .stdout(predicate::str::contains(".envrc created"))
@@ -133,11 +133,11 @@ fn init_skips_when_envrc_exists() {
     let dir = TempDir::new().unwrap();
     fs::write(dir.path().join(".envrc"), "existing content").unwrap();
 
-    // stdin: domain, empty (accept derived label), account ID (envrc step is skipped)
+    // stdin: n (skip worker), n (skip dns) — envrc step is skipped
     cfops()
         .arg("init")
         .current_dir(dir.path())
-        .write_stdin("acme.com\n\naccount123\n")
+        .write_stdin("n\nn\n")
         .assert()
         .success()
         .stdout(predicate::str::contains("already exists"));
@@ -154,7 +154,7 @@ fn init_does_not_duplicate_envrc_in_gitignore() {
     cfops()
         .arg("init")
         .current_dir(dir.path())
-        .write_stdin("myaccount\nacme.com\n\naccount123\n")
+        .write_stdin("myaccount\nn\nn\n")
         .assert()
         .success();
 
@@ -171,7 +171,7 @@ fn init_appends_envrc_to_existing_gitignore() {
     cfops()
         .arg("init")
         .current_dir(dir.path())
-        .write_stdin("myaccount\nacme.com\n\naccount123\n")
+        .write_stdin("myaccount\nn\nn\n")
         .assert()
         .success()
         .stdout(predicate::str::contains(".envrc added to .gitignore"));
@@ -185,10 +185,11 @@ fn init_appends_envrc_to_existing_gitignore() {
 fn init_scaffolds_terraform_files() {
     let dir = TempDir::new().unwrap();
 
+    // stdin: account name, n (skip worker), y (setup dns), domain, empty label, account ID
     cfops()
         .arg("init")
         .current_dir(dir.path())
-        .write_stdin("myaccount\nacme.com\n\naccount123\n")
+        .write_stdin("myaccount\nn\ny\nacme.com\n\naccount123\n")
         .assert()
         .success()
         .stdout(predicate::str::contains("terraform/ scaffolded"));
@@ -206,12 +207,12 @@ fn init_scaffolds_terraform_files() {
 fn init_terraform_uses_account_id_from_env() {
     let dir = TempDir::new().unwrap();
 
-    // stdin: account name, domain, empty (accept derived label) — no account ID prompt
+    // stdin: account name, n (skip worker), y (setup dns), domain, empty label — no account ID prompt
     cfops()
         .arg("init")
         .current_dir(dir.path())
         .env("CLOUDFLARE_ACCOUNT_ID", "env_account_id")
-        .write_stdin("myaccount\nacme.com\n\n")
+        .write_stdin("myaccount\nn\ny\nacme.com\n\n")
         .assert()
         .success()
         .stdout(predicate::str::contains("Using CLOUDFLARE_ACCOUNT_ID from env"));
@@ -224,10 +225,11 @@ fn init_terraform_uses_account_id_from_env() {
 fn init_terraform_derives_resource_label_from_domain() {
     let dir = TempDir::new().unwrap();
 
+    // stdin: account name, n (skip worker), y (setup dns), domain, empty label, account ID
     cfops()
         .arg("init")
         .current_dir(dir.path())
-        .write_stdin("myaccount\nacme.com\n\naccount123\n")
+        .write_stdin("myaccount\nn\ny\nacme.com\n\naccount123\n")
         .assert()
         .success();
 
@@ -241,11 +243,11 @@ fn init_terraform_derives_resource_label_from_domain() {
 fn init_terraform_accepts_custom_resource_label() {
     let dir = TempDir::new().unwrap();
 
-    // stdin: account name, domain, custom label, account ID
+    // stdin: account name, n (skip worker), y (setup dns), domain, custom label, account ID
     cfops()
         .arg("init")
         .current_dir(dir.path())
-        .write_stdin("myaccount\nacme.com\ncustom_label\naccount123\n")
+        .write_stdin("myaccount\nn\ny\nacme.com\ncustom_label\naccount123\n")
         .assert()
         .success();
 
@@ -258,13 +260,70 @@ fn init_skips_terraform_when_terraform_dir_exists() {
     let dir = TempDir::new().unwrap();
     fs::create_dir(dir.path().join("terraform")).unwrap();
 
+    // stdin: account name, n (skip worker), y (setup dns) — terraform dir exists so skips
     cfops()
         .arg("init")
         .current_dir(dir.path())
-        .write_stdin("myaccount\n")
+        .write_stdin("myaccount\nn\ny\n")
         .assert()
         .success()
         .stdout(predicate::str::contains("terraform/ already exists — skipping"));
+}
+
+#[test]
+fn init_scaffolds_wrangler_toml() {
+    let dir = TempDir::new().unwrap();
+
+    // stdin: account name, y (setup worker), worker name, empty (accept ./dist), n (skip dns)
+    cfops()
+        .arg("init")
+        .current_dir(dir.path())
+        .write_stdin("myaccount\ny\nmysite-static\n\nn\n")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("wrangler.toml created"));
+
+    let wrangler = fs::read_to_string(dir.path().join("wrangler.toml")).unwrap();
+    assert!(wrangler.contains("name = \"mysite-static\""));
+    assert!(wrangler.contains("directory = \"./dist\""));
+    assert!(wrangler.contains("compatibility_date"));
+    assert!(!wrangler.contains("<WORKER_NAME>"));
+    assert!(!wrangler.contains("<ASSETS_DIRECTORY>"));
+    assert!(!wrangler.contains("<COMPATIBILITY_DATE>"));
+}
+
+#[test]
+fn init_wrangler_accepts_custom_assets_dir() {
+    let dir = TempDir::new().unwrap();
+
+    // stdin: account name, y (setup worker), worker name, custom assets dir, n (skip dns)
+    cfops()
+        .arg("init")
+        .current_dir(dir.path())
+        .write_stdin("myaccount\ny\nmysite-static\n./build\nn\n")
+        .assert()
+        .success();
+
+    let wrangler = fs::read_to_string(dir.path().join("wrangler.toml")).unwrap();
+    assert!(wrangler.contains("directory = \"./build\""));
+}
+
+#[test]
+fn init_skips_wrangler_when_wrangler_toml_exists() {
+    let dir = TempDir::new().unwrap();
+    fs::write(dir.path().join("wrangler.toml"), "existing content").unwrap();
+
+    // stdin: account name, y (setup worker) — wrangler.toml exists so skips, n (skip dns)
+    cfops()
+        .arg("init")
+        .current_dir(dir.path())
+        .write_stdin("myaccount\ny\nn\n")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("wrangler.toml already exists — skipping"));
+
+    let contents = fs::read_to_string(dir.path().join("wrangler.toml")).unwrap();
+    assert_eq!(contents, "existing content");
 }
 
 // ── credential loading ────────────────────────────────────────────────────────

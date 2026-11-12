@@ -22,7 +22,15 @@ cfops -tf destroy
 
 Destroys Terraform-managed resources (zone, DNS records, redirect rules).
 
-## 3. Cloudflare tokens
+## 3. R2 Buckets
+
+Delete all R2 buckets created for this project from **Cloudflare dashboard → Storage & Databases → R2 Object Storage**:
+
+- `<RESOURCE_LABEL>-terraform-state`
+
+> **Note:** The R2 subscription itself cannot be removed once enabled — see [section 1](#1-permanent--cannot-be-undone).
+
+## 4. Cloudflare tokens
 
 Delete all three from **Cloudflare dashboard → My Profile → API Tokens**:
 
@@ -30,7 +38,7 @@ Delete all three from **Cloudflare dashboard → My Profile → API Tokens**:
 - `DNS Config (<domain>)` — Terraform token
 - R2 User Token for terraform state bucket (also accessible via R2 → Manage API Tokens)
 
-## 4. Bitwarden
+## 5. Bitwarden
 
 In Bitwarden Secrets Manager, remove:
 
@@ -38,7 +46,7 @@ In Bitwarden Secrets Manager, remove:
 - All secrets (`CLOUDFLARE_WORKER_PROVISION_TOKEN`, `CLOUDFLARE_DNS_CONFIG_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_R2_TERRAFORM_STATE_TOKEN`, `CLOUDFLARE_R2_TERRAFORM_STATE_ACCESS_KEY_ID`, `CLOUDFLARE_R2_TERRAFORM_STATE_SECRET_ACCESS_KEY`)
 - Project
 
-## 5. Keychain
+## 6. Keychain
 
 Delete the machine account token (item name has `bws_` prefix):
 

@@ -8,6 +8,7 @@ A guide to setting up Terraform as the Infrastructure as Code tool for managing 
   - [3.1 Pre-requisite: enable Cloudflare object storage](#31-pre-requisite-enable-cloudflare-object-storage)
   - [3.2 Create Terraform state bucket](#32-create-terraform-state-bucket)
   - [3.3 Setup Cloudflare R2 access keys](#33-setup-cloudflare-r2-access-keys)
+- [4. DNS setup complete](#4-dns-setup-complete)
 
 ## 1. Tooling
 
@@ -68,12 +69,18 @@ R2 access keys are a dedicated S3-compatible keypair — a different credential 
 
 1. Navigate to **Cloudflare dashboard → left sidebar → Storage & Databases → R2 Object Storage → Manage API Tokens**
 2. Click **Create API Token**
-3. Set Permissions to **Object Read & Write**, Bucket to **`<RESOURCE_LABEL>-terraform-state`**
-4. Copy the Token, Access Key ID, and Secret Access Key — all shown once
-5. Store all three in Bitwarden under the prod machine account project:
+3. Set **Permissions** to **Object Read & Write**
+4. For **Specify bucket(s)**, select **Apply to specific buckets only** and specify **`<DOMAIN>-terraform-state`**
+5. Click **Create User API Token**
+6. Copy the Token, Access Key ID, and Secret Access Key — all shown once
+7. Store all three in Bitwarden as secrets for the prod machine account project:
 
 | Secret name | Value |
 |-------------|-------|
 | `CLOUDFLARE_R2_TERRAFORM_STATE_TOKEN` | Token value |
 | `CLOUDFLARE_R2_TERRAFORM_STATE_ACCESS_KEY_ID` | Access Key ID |
 | `CLOUDFLARE_R2_TERRAFORM_STATE_SECRET_ACCESS_KEY` | Secret Access Key |
+
+## 4. DNS setup complete
+
+Return to and complete the [Setup Guide](../setup.md).

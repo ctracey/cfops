@@ -6,7 +6,7 @@ Covers tooling, provisioning, and deployment for this project.
 - [2. Worker Config](#2-worker-config)
   - [2.1 Worker Naming Convention](#21-worker-naming-convention)
   - [2.2 Create/Config Worker](#22-createconfig-worker)
-- [3. Provisioning](#3-provisioning)
+- [3. Provisioning Workers](#3-provisioning-workers)
   - [3.1 Deploy](#31-deploy)
   - [3.2 Deployment Status](#32-deployment-status)
   - [3.3 Delete](#33-delete)
@@ -50,7 +50,7 @@ This writes `wrangler.toml` to the project root using the [static worker templat
 > - check flow and scenario make sense
 > - add clear step UX (checklist as user progresses)
 
-## 3. Provisioning
+## 3. Provisioning Workers
 
 ### 3.1 Deploy
 
@@ -83,6 +83,8 @@ cfops -wr deployments status
 ```
 
 ### 3.3 Delete
+
+> **WARNING:** This will delete the worker from Cloudflare — only run when that is your intention.
 
 Delete the worker (uses name from `wrangler.toml`). Prompts for confirmation:
 

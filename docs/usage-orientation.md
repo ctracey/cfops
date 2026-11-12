@@ -36,7 +36,8 @@ cfops -wr -h                      # Full Wrangler help — cfops is a full deleg
 `cfops` injects Cloudflare credentials and R2 state backend credentials before delegating to Terraform.
 
 ```bash
-cfops -tf init -backend-config=terraform/backend.hcl
+cd terraform
+cfops -tf init -backend-config=./backend.hcl
 cfops -tf plan
 cfops -tf apply
 cfops -tf -h                      # Full Terraform help — cfops is a full delegation

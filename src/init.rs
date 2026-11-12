@@ -113,6 +113,48 @@ fn scaffold_wrangler() -> Result<()> {
     Ok(())
 }
 
+pub fn attach_domain(domain: &str) -> Result<()> {
+    let path = Path::new(WRANGLER_FILE);
+    if !path.exists() {
+        anyhow::bail!("wrangler.toml not found — run 'cfops init' first");
+    }
+
+    let content = fs::read_to_string(path)?;
+
+    let routes_block = format!(
+        "routes = [\n  {{ pattern = \"{domain}\", custom_domain = true }}\n]"
+    );
+
+    let new_content = if content.contains("routes") {
+        replace_routes_block(&content, &routes_block)
+    } else {
+        match content.lines().position(|l| l.starts_with('[')) {
+            Some(pos) => {
+                let lines: Vec<&str> = content.lines().collect();
+                let before = lines[..pos].join("\n").trim_end().to_string();
+                let after = lines[pos..].join("\n");
+                format!("{before}\n\n{routes_block}\n\n{after}\n")
+            }
+            None => format!("{}\n\n{routes_block}\n", content.trim_end()),
+        }
+    };
+
+    fs::write(path, new_content)?;
+    println!("\x1b[32m✓\x1b[0m wrangler.toml updated — {domain} will be attached on next deploy");
+    println!("  Run \x1b[1mcfops deploy\x1b[0m to attach the domain");
+
+    Ok(())
+}
+
+fn replace_routes_block(content: &str, routes_block: &str) -> String {
+    let lines: Vec<&str> = content.lines().collect();
+    let start = lines.iter().position(|l| l.starts_with("routes")).unwrap();
+    let end = lines[start..].iter().position(|l| *l == "]").map(|i| start + i + 1).unwrap_or(start + 1);
+    let before = lines[..start].join("\n").trim_end().to_string();
+    let after = lines[end..].join("\n").trim_start().to_string();
+    format!("{before}\n\n{routes_block}\n\n{after}\n")
+}
+
 fn today_iso() -> String {
     let days = SystemTime::now()
         .duration_since(UNIX_EPOCH)

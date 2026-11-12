@@ -27,7 +27,7 @@ directory = "./dist"
 ### 1.2 Deploy
 
 ```bash
-cfops -wr deploy
+cfops worker --deploy
 ```
 
 Wrangler creates the DNS record for the apex and provisions the SSL certificate automatically. No separate DNS record management required.

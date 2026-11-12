@@ -57,7 +57,7 @@ This writes `wrangler.toml` to the project root using the [static worker templat
 Wrangler creates the worker on first deploy and serves assets from `dist/`. No pre-provisioning required for `*.workers.dev`:
 
 ```bash
-cfops deploy
+cfops worker --deploy
 ```
 
 On first deploy Cloudflare prompts for a `workers.dev` subdomain — this is account-level and applies to all workers. The deployed URL will be:
@@ -69,7 +69,7 @@ https://<worker-name>.<your-subdomain>.workers.dev
 To see all current deployments for the active account:
 
 ```bash
-cfops list
+cfops worker --list
 ```
 
 This opens the Workers & Pages dashboard for the active account directly in the browser.
@@ -89,7 +89,7 @@ cfops -wr deployments status
 Delete the worker (uses name from `wrangler.toml`). Prompts for confirmation:
 
 ```bash
-cfops delete
+cfops worker --delete
 ```
 
 ## 4. Domain Routing

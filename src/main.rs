@@ -47,7 +47,9 @@ fn run(args: Vec<String>) -> Result<i32> {
             init::run()?;
             Ok(0)
         }
-        Command::List => {
+        Command::WorkerDeploy => run_wrangler(&["deploy".to_string()]),
+        Command::WorkerDelete => run_wrangler(&["delete".to_string()]),
+        Command::WorkerList => {
             let token = load()?;
             let account_id = bws::get_secret(&token, CLOUDFLARE_ACCOUNT_ID)?;
             open_in_browser(&format!(
@@ -55,8 +57,10 @@ fn run(args: Vec<String>) -> Result<i32> {
             ))?;
             Ok(0)
         }
-        Command::Deploy => run_wrangler(&["deploy".to_string()]),
-        Command::Delete => run_wrangler(&["delete".to_string()]),
+        Command::WorkerAttach(domain) => {
+            init::attach_domain(&domain)?;
+            Ok(0)
+        }
         Command::Wrangler(wrangler_args) => run_wrangler(&wrangler_args),
         Command::Terraform(terraform_args) => run_terraform(&terraform_args),
     }

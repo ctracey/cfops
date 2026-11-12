@@ -1,30 +1,29 @@
 # Worker DNS Config
 
 - [1. Attach Domain to Worker](#1-attach-domain-to-worker)
-  - [1.1 Configure](#11-configure)
-  - [1.2 Deploy](#12-deploy)
-  - [1.3 Verify](#13-verify)
+  - [1.1 Worker Domain Routing Config](#11-worker-domain-routing-config)
+  - [1.2 Deploy Updated Worker Config](#12-deploy-worker-config-update)
+  - [1.3 Verify Worker Domain Routing](#13-verify)
 - [2. Adding Further Workers](#2-adding-further-workers)
 
 ## 1. Attach Domain to Worker
 
-### 1.1 Configure
+This section applies when attaching a new domain route — an apex domain, a subdomain, or any route being attached for the first time.
 
-Add to `wrangler.toml` at the top level — before any `[section]` headers:
+- **New domain route:** requires DNS propagation and SSL certificate provisioning — allow up to 30 minutes
+- **Redeploy on existing route** (e.g. updating worker content): instant — no propagation delay
 
-```toml
-name = "<WORKER_NAME>"
-compatibility_date = "<DATE>"
+### 1.1 Worker Domain Routing Config
 
-routes = [
-  { pattern = "<DOMAIN>", custom_domain = true }
-]
+Add the domain route to `wrangler.toml`:
 
-[assets]
-directory = "./dist"
+```bash
+cfops worker --attach <DOMAIN>
 ```
 
-### 1.2 Deploy
+This adds the route to `wrangler.toml` automatically. Run `cfops worker --deploy` to apply it.
+
+### 1.2 Deploy Updated Worker Config
 
 ```bash
 cfops worker --deploy
@@ -32,7 +31,7 @@ cfops worker --deploy
 
 Wrangler creates the DNS record for the apex and provisions the SSL certificate automatically. No separate DNS record management required.
 
-### 1.3 Verify
+### 1.3 Verify Worker Domain Routing
 
 Allow up to 30 minutes after deploy for the DNS record to propagate and the SSL certificate to provision before running these checks. Since both the nameservers and DNS records are Cloudflare-managed, propagation is typically much faster than the industry-standard 48-hour window — but 30 minutes is a reasonable upper bound.
 
@@ -63,18 +62,13 @@ Expected: apex returns 200, www returns 301 to `https://<DOMAIN>`, certificate i
 
 ## 2. Adding Further Workers
 
-Terraform is a one-time zone setup — it does not need to change for additional workers. Each new worker just needs its own `wrangler.toml` with the appropriate route:
+Terraform is a one-time zone setup — it does not need to change for additional workers. Each new worker just needs its domain attached and deployed:
 
-```toml
-name = "<WORKER_NAME>"
-compatibility_date = "<DATE>"
+> **Note:** Each worker is a separate deployable unit with its own repo and `wrangler.toml` — Wrangler requires a `wrangler.toml` per worker to define its name, routes, and assets. The Cloudflare account is the shared boundary — multiple workers on the same account each follow this same attach and deploy pattern from their own project directory.
 
-routes = [
-  { pattern = "sub.<DOMAIN>", custom_domain = true }
-]
-
-[assets]
-directory = "./dist"
+```bash
+cfops worker --attach sub.<DOMAIN>
+cfops worker --deploy
 ```
 
 Deploying that worker creates the DNS record for the subdomain in the same `<DOMAIN>` zone. Each worker manages its own DNS record independently.

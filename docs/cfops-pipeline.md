@@ -6,6 +6,10 @@ Releases are created automatically by GitHub Actions when a version tag is pushe
 
 ### Cut a release
 
+1. Update the version in `Cargo.toml`
+2. Commit the version bump
+3. Tag and push:
+
 ```bash
 git tag v<major>.<minor>.<patch>
 git push origin v<major>.<minor>.<patch>

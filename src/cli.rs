@@ -5,10 +5,12 @@ pub enum Command {
     Help,
     Version,
     Init,
+    WorkerCreate,
     WorkerDeploy,
     WorkerDelete,
     WorkerList,
     WorkerAttach(String),
+    ZoneInit,
     Wrangler(Vec<String>),
     Terraform(Vec<String>),
 }
@@ -19,6 +21,7 @@ pub fn parse_args(args: &[String]) -> Option<Command> {
         Some("-v" | "--version") => Some(Command::Version),
         Some("init") => Some(Command::Init),
         Some("worker") => parse_worker_subcommand(&args[1..]),
+        Some("zone") => parse_zone_subcommand(&args[1..]),
         Some("-wr" | "--wrangler") => Some(Command::Wrangler(args[1..].to_vec())),
         Some("-tf" | "--terraform") => Some(Command::Terraform(args[1..].to_vec())),
         _ => None,
@@ -27,10 +30,18 @@ pub fn parse_args(args: &[String]) -> Option<Command> {
 
 fn parse_worker_subcommand(args: &[String]) -> Option<Command> {
     match args.first().map(String::as_str) {
+        Some("--create") => Some(Command::WorkerCreate),
         Some("--deploy") => Some(Command::WorkerDeploy),
         Some("--delete") => Some(Command::WorkerDelete),
         Some("--list") => Some(Command::WorkerList),
         Some("--attach") => args.get(1).map(|d| Command::WorkerAttach(d.clone())),
+        _ => None,
+    }
+}
+
+fn parse_zone_subcommand(args: &[String]) -> Option<Command> {
+    match args.first().map(String::as_str) {
+        Some("--init") => Some(Command::ZoneInit),
         _ => None,
     }
 }
@@ -43,15 +54,20 @@ pub fn help_text() -> String {
         "  cfops <command> [args]".to_string(),
         String::new(),
         "\x1b[1mCommands:\x1b[0m".to_string(),
-        "  init                     Initialise .envrc for the current project".to_string(),
+        "  init                     Scaffold .envrc + .gitignore (run this first)".to_string(),
+        "  worker --create          Scaffold wrangler.toml for a new worker".to_string(),
         "  worker --deploy          Deploy the worker".to_string(),
         "  worker --delete          Delete the worker (prompts for confirmation)".to_string(),
         "  worker --list            Open Workers & Pages dashboard for the active account".to_string(),
         "  worker --attach <DOMAIN> Attach a custom domain to the worker via wrangler.toml".to_string(),
+        "  zone --init              Scaffold terraform/ DNS config (fetches account ID from Bitwarden)".to_string(),
         "  -wr, --wrangler <args>   Run any Wrangler command with credentials injected".to_string(),
         "  -tf, --terraform <args>  Run any Terraform command with credentials injected".to_string(),
         "  -v                       Show version".to_string(),
         "  -h                       Show this help".to_string(),
+        String::new(),
+        "\x1b[1mTypical setup order:\x1b[0m".to_string(),
+        "  cfops init               → direnv allow → cfops worker --create / cfops zone --init".to_string(),
         String::new(),
         "\x1b[1mExamples:\x1b[0m".to_string(),
         "  cfops worker --deploy".to_string(),
@@ -86,6 +102,18 @@ mod tests {
     #[test]
     fn parses_init() {
         assert_eq!(parse_args(&["init".to_string()]), Some(Command::Init));
+    }
+
+    #[test]
+    fn parses_worker_create() {
+        let args = vec!["worker".to_string(), "--create".to_string()];
+        assert_eq!(parse_args(&args), Some(Command::WorkerCreate));
+    }
+
+    #[test]
+    fn parses_zone_init() {
+        let args = vec!["zone".to_string(), "--init".to_string()];
+        assert_eq!(parse_args(&args), Some(Command::ZoneInit));
     }
 
     #[test]
@@ -183,7 +211,7 @@ mod tests {
     #[test]
     fn help_text_contains_all_commands() {
         let text = help_text();
-        for expected in &["init", "--deploy", "--delete", "--list", "--attach", "-wr", "--wrangler", "-tf", "--terraform"] {
+        for expected in &["init", "--create", "--deploy", "--delete", "--list", "--attach", "zone", "-wr", "--wrangler", "-tf", "--terraform"] {
             assert!(text.contains(expected), "help text missing: {expected}");
         }
     }

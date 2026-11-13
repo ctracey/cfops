@@ -26,7 +26,7 @@ A Cloudflare zone is the container for a domain's DNS settings — it controls h
 
 ### 2.1 Config definition
 
-The Terraform config is scaffolded by `cfops init` into `terraform/`. It provisions the `<DOMAIN>` zone, a www CNAME record, and a www→apex 301 redirect ruleset.
+The Terraform config is scaffolded by `cfops zone --init` into `terraform/`. It provisions the `<DOMAIN>` zone, a www CNAME record, and a www→apex 301 redirect ruleset.
 
 ### 2.2 www redirect config
 
@@ -106,7 +106,7 @@ The zone becomes active in Cloudflare once it detects the delegation.
 
 Now that `<DOMAIN>` exists as a Cloudflare zone, narrow the DNS token from "All zones from account" to this specific zone.
 
-1. Find the `DNS config token (<DOMAIN>)` token ([Dashboard → My Profile → API Tokens](https://dash.cloudflare.com/profile/api-tokens))
+1. Find the `DNS config token (<DOMAIN>)` token (**Dashboard → Manage Account → Account API Tokens**)
 2. Edit the token
 3. Under **Zone policy**, deselect the account — **Specific zone** is not selectable until the account is removed
 4. Change from **All zones from account** to **Specific zone** and select `<DOMAIN>`

@@ -108,11 +108,10 @@ fn unknown_command_produces_no_stdout() {
 fn init_creates_envrc_and_gitignore_entry() {
     let dir = TempDir::new().unwrap();
 
-    // stdin: account name, n (skip worker), n (skip dns)
     cfops()
         .arg("init")
         .current_dir(dir.path())
-        .write_stdin("myaccount\nn\nn\n")
+        .write_stdin("myaccount\n")
         .assert()
         .success()
         .stdout(predicate::str::contains(".envrc created"))
@@ -133,11 +132,10 @@ fn init_skips_when_envrc_exists() {
     let dir = TempDir::new().unwrap();
     fs::write(dir.path().join(".envrc"), "existing content").unwrap();
 
-    // stdin: n (skip worker), n (skip dns) — envrc step is skipped
     cfops()
         .arg("init")
         .current_dir(dir.path())
-        .write_stdin("n\nn\n")
+        .write_stdin("")
         .assert()
         .success()
         .stdout(predicate::str::contains("already exists"));
@@ -154,7 +152,7 @@ fn init_does_not_duplicate_envrc_in_gitignore() {
     cfops()
         .arg("init")
         .current_dir(dir.path())
-        .write_stdin("myaccount\nn\nn\n")
+        .write_stdin("myaccount\n")
         .assert()
         .success();
 
@@ -171,7 +169,7 @@ fn init_appends_envrc_to_existing_gitignore() {
     cfops()
         .arg("init")
         .current_dir(dir.path())
-        .write_stdin("myaccount\nn\nn\n")
+        .write_stdin("myaccount\n")
         .assert()
         .success()
         .stdout(predicate::str::contains(".envrc added to .gitignore"));
@@ -181,104 +179,16 @@ fn init_appends_envrc_to_existing_gitignore() {
     assert!(gitignore.lines().any(|l| l == ".envrc"));
 }
 
-#[test]
-fn init_scaffolds_terraform_files() {
-    let dir = TempDir::new().unwrap();
-
-    // stdin: account name, n (skip worker), y (setup dns), domain, empty label, account ID
-    cfops()
-        .arg("init")
-        .current_dir(dir.path())
-        .write_stdin("myaccount\nn\ny\nacme.com\n\naccount123\n")
-        .assert()
-        .success()
-        .stdout(predicate::str::contains("terraform/ scaffolded"));
-
-    let main_tf = fs::read_to_string(dir.path().join("terraform/main.tf")).unwrap();
-    assert!(main_tf.contains("acme.com"));
-    assert!(main_tf.contains("cloudflare_zone.acme"));
-
-    let backend_hcl = fs::read_to_string(dir.path().join("terraform/backend.hcl")).unwrap();
-    assert!(backend_hcl.contains("acme-terraform-state"));
-    assert!(backend_hcl.contains("account123.r2.cloudflarestorage.com"));
-}
+// ── worker --create ───────────────────────────────────────────────────────────
 
 #[test]
-fn init_terraform_uses_account_id_from_env() {
+fn worker_create_scaffolds_wrangler_toml() {
     let dir = TempDir::new().unwrap();
 
-    // stdin: account name, n (skip worker), y (setup dns), domain, empty label — no account ID prompt
     cfops()
-        .arg("init")
+        .args(["worker", "--create"])
         .current_dir(dir.path())
-        .env("CLOUDFLARE_ACCOUNT_ID", "env_account_id")
-        .write_stdin("myaccount\nn\ny\nacme.com\n\n")
-        .assert()
-        .success()
-        .stdout(predicate::str::contains("Using CLOUDFLARE_ACCOUNT_ID from env"));
-
-    let backend_hcl = fs::read_to_string(dir.path().join("terraform/backend.hcl")).unwrap();
-    assert!(backend_hcl.contains("env_account_id.r2.cloudflarestorage.com"));
-}
-
-#[test]
-fn init_terraform_derives_resource_label_from_domain() {
-    let dir = TempDir::new().unwrap();
-
-    // stdin: account name, n (skip worker), y (setup dns), domain, empty label, account ID
-    cfops()
-        .arg("init")
-        .current_dir(dir.path())
-        .write_stdin("myaccount\nn\ny\nacme.com\n\naccount123\n")
-        .assert()
-        .success();
-
-    let main_tf = fs::read_to_string(dir.path().join("terraform/main.tf")).unwrap();
-    assert!(main_tf.contains("cloudflare_zone.acme"));
-    assert!(!main_tf.contains("<RESOURCE_LABEL>"));
-    assert!(!main_tf.contains("<DOMAIN>"));
-}
-
-#[test]
-fn init_terraform_accepts_custom_resource_label() {
-    let dir = TempDir::new().unwrap();
-
-    // stdin: account name, n (skip worker), y (setup dns), domain, custom label, account ID
-    cfops()
-        .arg("init")
-        .current_dir(dir.path())
-        .write_stdin("myaccount\nn\ny\nacme.com\ncustom_label\naccount123\n")
-        .assert()
-        .success();
-
-    let main_tf = fs::read_to_string(dir.path().join("terraform/main.tf")).unwrap();
-    assert!(main_tf.contains("cloudflare_zone.custom_label"));
-}
-
-#[test]
-fn init_skips_terraform_when_terraform_dir_exists() {
-    let dir = TempDir::new().unwrap();
-    fs::create_dir(dir.path().join("terraform")).unwrap();
-
-    // stdin: account name, n (skip worker), y (setup dns) — terraform dir exists so skips
-    cfops()
-        .arg("init")
-        .current_dir(dir.path())
-        .write_stdin("myaccount\nn\ny\n")
-        .assert()
-        .success()
-        .stdout(predicate::str::contains("terraform/ already exists — skipping"));
-}
-
-#[test]
-fn init_scaffolds_wrangler_toml() {
-    let dir = TempDir::new().unwrap();
-
-    // stdin: account name, y (setup worker), worker name, empty (accept ./dist), n (skip dns)
-    cfops()
-        .arg("init")
-        .current_dir(dir.path())
-        .write_stdin("myaccount\ny\nmysite-static\n\nn\n")
+        .write_stdin("mysite-static\n\n")
         .assert()
         .success()
         .stdout(predicate::str::contains("wrangler.toml created"));
@@ -293,14 +203,13 @@ fn init_scaffolds_wrangler_toml() {
 }
 
 #[test]
-fn init_wrangler_accepts_custom_assets_dir() {
+fn worker_create_accepts_custom_assets_dir() {
     let dir = TempDir::new().unwrap();
 
-    // stdin: account name, y (setup worker), worker name, custom assets dir, n (skip dns)
     cfops()
-        .arg("init")
+        .args(["worker", "--create"])
         .current_dir(dir.path())
-        .write_stdin("myaccount\ny\nmysite-static\n./build\nn\n")
+        .write_stdin("mysite-static\n./build\n")
         .assert()
         .success();
 
@@ -309,21 +218,108 @@ fn init_wrangler_accepts_custom_assets_dir() {
 }
 
 #[test]
-fn init_skips_wrangler_when_wrangler_toml_exists() {
+fn worker_create_skips_when_wrangler_toml_exists() {
     let dir = TempDir::new().unwrap();
     fs::write(dir.path().join("wrangler.toml"), "existing content").unwrap();
 
-    // stdin: account name, y (setup worker) — wrangler.toml exists so skips, n (skip dns)
     cfops()
-        .arg("init")
+        .args(["worker", "--create"])
         .current_dir(dir.path())
-        .write_stdin("myaccount\ny\nn\n")
+        .write_stdin("")
         .assert()
         .success()
         .stdout(predicate::str::contains("wrangler.toml already exists — skipping"));
 
     let contents = fs::read_to_string(dir.path().join("wrangler.toml")).unwrap();
     assert_eq!(contents, "existing content");
+}
+
+// ── zone --init ───────────────────────────────────────────────────────────────
+
+#[test]
+fn zone_init_scaffolds_terraform_files() {
+    let dir = TempDir::new().unwrap();
+
+    // stdin: domain, empty label (accept default), account ID
+    cfops()
+        .args(["zone", "--init"])
+        .current_dir(dir.path())
+        .write_stdin("acme.com\n\naccount123\n")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("terraform/ scaffolded"));
+
+    let main_tf = fs::read_to_string(dir.path().join("terraform/main.tf")).unwrap();
+    assert!(main_tf.contains("acme.com"));
+    assert!(main_tf.contains("cloudflare_zone.acme"));
+
+    let backend_hcl = fs::read_to_string(dir.path().join("terraform/backend.hcl")).unwrap();
+    assert!(backend_hcl.contains("acme-terraform-state"));
+    assert!(backend_hcl.contains("account123.r2.cloudflarestorage.com"));
+}
+
+#[test]
+fn zone_init_uses_account_id_from_env() {
+    let dir = TempDir::new().unwrap();
+
+    // stdin: domain, empty label — no account ID prompt (env var supplies it)
+    cfops()
+        .args(["zone", "--init"])
+        .current_dir(dir.path())
+        .env("CLOUDFLARE_ACCOUNT_ID", "env_account_id")
+        .write_stdin("acme.com\n\n")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Using CLOUDFLARE_ACCOUNT_ID from env"));
+
+    let backend_hcl = fs::read_to_string(dir.path().join("terraform/backend.hcl")).unwrap();
+    assert!(backend_hcl.contains("env_account_id.r2.cloudflarestorage.com"));
+}
+
+#[test]
+fn zone_init_derives_resource_label_from_domain() {
+    let dir = TempDir::new().unwrap();
+
+    cfops()
+        .args(["zone", "--init"])
+        .current_dir(dir.path())
+        .write_stdin("acme.com\n\naccount123\n")
+        .assert()
+        .success();
+
+    let main_tf = fs::read_to_string(dir.path().join("terraform/main.tf")).unwrap();
+    assert!(main_tf.contains("cloudflare_zone.acme"));
+    assert!(!main_tf.contains("<RESOURCE_LABEL>"));
+    assert!(!main_tf.contains("<DOMAIN>"));
+}
+
+#[test]
+fn zone_init_accepts_custom_resource_label() {
+    let dir = TempDir::new().unwrap();
+
+    cfops()
+        .args(["zone", "--init"])
+        .current_dir(dir.path())
+        .write_stdin("acme.com\ncustom_label\naccount123\n")
+        .assert()
+        .success();
+
+    let main_tf = fs::read_to_string(dir.path().join("terraform/main.tf")).unwrap();
+    assert!(main_tf.contains("cloudflare_zone.custom_label"));
+}
+
+#[test]
+fn zone_init_skips_when_terraform_dir_exists() {
+    let dir = TempDir::new().unwrap();
+    fs::create_dir(dir.path().join("terraform")).unwrap();
+
+    cfops()
+        .args(["zone", "--init"])
+        .current_dir(dir.path())
+        .write_stdin("")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("terraform/ already exists — skipping"));
 }
 
 // ── credential loading ────────────────────────────────────────────────────────

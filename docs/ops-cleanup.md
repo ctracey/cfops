@@ -15,6 +15,8 @@ cfops -wr delete
 
 Deletes the Cloudflare Worker. Prompts for confirmation.
 
+Run the following from the **terraform folder**:
+
 ```bash
 cfops -tf init -backend-config=backend.hcl
 cfops -tf destroy
@@ -24,15 +26,18 @@ Destroys Terraform-managed resources (zone, DNS records, redirect rules).
 
 ## 3. R2 Buckets
 
-Delete all R2 buckets created for this project from **Cloudflare dashboard → Storage & Databases → R2 Object Storage**:
+Delete all R2 buckets created for this project.
+The bucket must be empty first — delete all bucket items via **Cloudflare dashboard → R2 → `<DOMAIN>-terraform-state`**, then run:
 
-- `<RESOURCE_LABEL>-terraform-state`
+```bash
+cfops -wr r2 bucket delete <DOMAIN>-terraform-state
+```
 
 > **Note:** The R2 subscription itself cannot be removed once enabled — see [section 1](#1-permanent--cannot-be-undone).
 
 ## 4. Cloudflare tokens
 
-Delete all three from **Cloudflare dashboard → My Profile → API Tokens**:
+Delete all three from **Cloudflare dashboard → Account API Tokens**:
 
 - `Worker Provision (all)` — Wrangler token
 - `DNS Config (<domain>)` — Terraform token

@@ -33,22 +33,15 @@ Worker names reflect type only — environment separation is handled by the acco
 
 ### 2.2 Create/Config Worker
 
-Run `cfops init` and answer yes to "Set up a worker?". If `.envrc` already exists it skips straight to the worker prompt:
-
 ```bash
-cfops init
+cfops worker --create
 ```
 
 Prompts for:
 - Worker name (see [naming convention](#21-worker-naming-convention))
 - Assets directory (default: `./dist`)
 
-This writes `wrangler.toml` to the project root using the [static worker template](../templates/wrangler/static-worker/wrangler.toml), with today's date set as the compatibility date.
-
-> TODO:
-> - test this end to end
-> - check flow and scenario make sense
-> - add clear step UX (checklist as user progresses)
+Writes `wrangler.toml` to the project root using the [static worker template](../templates/wrangler/static-worker/wrangler.toml), with today's date set as the compatibility date. Run after `direnv allow` so credentials are live.
 
 ## 3. Provisioning Workers
 

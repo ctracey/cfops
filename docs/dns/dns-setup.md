@@ -8,7 +8,8 @@ A guide to setting up Terraform as the Infrastructure as Code tool for managing 
   - [3.1 Pre-requisite: enable Cloudflare object storage](#31-pre-requisite-enable-cloudflare-object-storage)
   - [3.2 Create Terraform state bucket](#32-create-terraform-state-bucket)
   - [3.3 Setup Cloudflare R2 access keys](#33-setup-cloudflare-r2-access-keys)
-- [4. DNS setup complete](#4-dns-setup-complete)
+- [4. Scaffold Terraform Config](#4-scaffold-terraform-config)
+- [5. DNS setup complete](#5-dns-setup-complete)
 
 ## 1. Tooling
 
@@ -20,14 +21,14 @@ A guide to setting up Terraform as the Infrastructure as Code tool for managing 
 
 Here we configure the DNS token for your domain — scoping it to the correct zone and adding the permissions Terraform needs.
 
-1. Find the `DNS config token (<DOMAIN>)` token created in [setup 1.2](../setup.md#12-cloudflare-access) ([Dashboard → My Profile → API Tokens](https://dash.cloudflare.com/profile/api-tokens))
+1. Find the `DNS config token (<DOMAIN>)` token created in [setup 1.2](../setup.md#12-cloudflare-access) (**Dashboard → Manage Account → Account API Tokens**)
 2. Edit the token — within the zone policy section, expand each group and enable the following permissions:
 
    | Group | Permission | Access |
    |---|---|---|
    | DNS & Zones | DNS | Edit (pre-set by template) |
    | DNS & Zones | Zone | Edit |
-   | Rules & Configuration | Single Redirect | Edit |
+   | Rules & Configuration | Dynamic URL Redirects | Edit |
 
 3. Click **Continue to summary** then **Update token**
 
@@ -51,7 +52,7 @@ Cloudflare requires manual account-level activation before any R2 operations wil
 
 > **Prerequisite:** The `Worker provisioning token` created in [setup 1.2](../setup.md#12-cloudflare-access) must have R2 bucket admin permissions.
 >
-> The token should be correctly configured from the template — optionally verify by checking **Account policy → Workers R2 Storage → Edit** is enabled ([Dashboard → My Profile → API Tokens](https://dash.cloudflare.com/profile/api-tokens)).
+> The token should be correctly configured from the template — optionally verify by checking **Account policy → Workers R2 Storage → Edit** is enabled (**Dashboard → Manage Account → Account API Tokens**).
 
 Create the R2 bucket that Terraform will use to store state:
 
@@ -68,12 +69,14 @@ Terraform needs access to the R2 bucket to maintain its inventory of managed Clo
 R2 access keys are a dedicated S3-compatible keypair — a different credential type from Cloudflare API tokens such as `Worker Provision (all)` or `DNS Config (<DOMAIN>)`. Cloudflare calls this an **R2 User Token**. It must be created through the R2 token flow.
 
 1. Navigate to **Cloudflare dashboard → left sidebar → Storage & Databases → R2 Object Storage → Manage API Tokens**
-2. Click **Create API Token**
-3. Set **Permissions** to **Object Read & Write**
-4. For **Specify bucket(s)**, select **Apply to specific buckets only** and specify **`<DOMAIN>-terraform-state`**
-5. Click **Create User API Token**
-6. Copy the Token, Access Key ID, and Secret Access Key — all shown once
-7. Store all three in Bitwarden as secrets for the prod machine account project:
+2. Click **Create Account API Token**
+3. Set **Token Name** to **`R2 terraform state (<DOMAIN>)`**
+4. Set **Permissions** to **Object Read & Write**
+5. For **Specify bucket(s)**, select **Apply to specific buckets only** and specify **`<DOMAIN>-terraform-state`**
+6. Set **TTL** expiration to **1 year**
+7. Click **Create Account API Token**
+8. Copy the Token, Access Key ID, and Secret Access Key — all shown once
+9. Store all three in Bitwarden as secrets for the prod machine account project:
 
 | Secret name | Value |
 |-------------|-------|
@@ -81,6 +84,27 @@ R2 access keys are a dedicated S3-compatible keypair — a different credential 
 | `CLOUDFLARE_R2_TERRAFORM_STATE_ACCESS_KEY_ID` | Access Key ID |
 | `CLOUDFLARE_R2_TERRAFORM_STATE_SECRET_ACCESS_KEY` | Secret Access Key |
 
-## 4. DNS setup complete
+## 4. Scaffold Terraform Config
+
+With credentials stored and the state backend ready, scaffold the Terraform config for the zone:
+
+```bash
+cfops zone --init
+```
+
+Prompts for:
+- Domain (e.g. `acme.com`)
+- Terraform resource label (default: derived from domain, e.g. `acme`)
+
+Fetches `CLOUDFLARE_ACCOUNT_ID` from Bitwarden automatically and writes:
+
+| File | Purpose |
+|------|---------|
+| `terraform/main.tf` | Zone and DNS record resources |
+| `terraform/outputs.tf` | Output values |
+| `terraform/variables.tf` | Input variable declarations |
+| `terraform/backend.hcl` | R2 state backend config (added to `.gitignore`) |
+
+## 5. DNS setup complete
 
 Return to and complete the [Setup Guide](../setup.md).

@@ -31,23 +31,12 @@ pub fn run() -> Result<()> {
     let mut actions: Vec<String> = Vec::new();
 
     section("Account setup");
-    let account_name = setup_envrc()?;
-    if account_name.is_some() {
+    if setup_envrc()? {
         actions.push("run 'direnv allow' to activate".to_string());
         if let Some(msg) = node_version_warning() {
             actions.push(msg);
         }
         actions.push("verify credentials: cfops -wr whoami — you should see a Keychain password prompt".to_string());
-    }
-
-    section("Worker setup");
-    if confirm("Set up a worker? [y/N]: ")? {
-        scaffold_wrangler()?;
-    }
-
-    section("DNS setup");
-    if confirm("Set up DNS for a domain? [y/N]: ")? {
-        scaffold_terraform(account_name.as_deref())?;
     }
 
     if !actions.is_empty() {
@@ -60,20 +49,33 @@ pub fn run() -> Result<()> {
     }
 
     println!("\n\x1b[1mNEXT STEPS:\x1b[0m");
-    println!("  \x1b[36mSee the usage scenarios guide for worker and Terraform provisioning:\x1b[0m");
+    println!("  After direnv allow:");
+    println!("    cfops worker --create   scaffold wrangler.toml");
+    println!("    cfops zone --init       scaffold terraform/ DNS config");
+    println!("  \x1b[36mSee the usage scenarios guide:\x1b[0m");
     println!("  \x1b[36mhttps://github.com/ctracey/cfops/blob/main/docs/usage-scenarios.md\x1b[0m");
 
     Ok(())
+}
+
+pub fn create_worker() -> Result<()> {
+    section("Worker setup");
+    scaffold_wrangler()
+}
+
+pub fn init_zone() -> Result<()> {
+    section("DNS setup");
+    scaffold_terraform()
 }
 
 fn section(title: &str) {
     println!("\n\x1b[1m{title}\x1b[0m");
 }
 
-fn setup_envrc() -> Result<Option<String>> {
+fn setup_envrc() -> Result<bool> {
     if Path::new(ENVRC_FILE).exists() {
         println!(".envrc already exists — skipping");
-        return Ok(None);
+        return Ok(false);
     }
 
     let account_name = prompt("Bitwarden machine account name: ")?;
@@ -83,7 +85,7 @@ fn setup_envrc() -> Result<Option<String>> {
 
     ensure_gitignore_entries("direnv", &[ENVRC_FILE])?;
 
-    Ok(Some(account_name))
+    Ok(true)
 }
 
 fn scaffold_wrangler() -> Result<()> {
@@ -116,7 +118,7 @@ fn scaffold_wrangler() -> Result<()> {
 pub fn attach_domain(domain: &str) -> Result<()> {
     let path = Path::new(WRANGLER_FILE);
     if !path.exists() {
-        anyhow::bail!("wrangler.toml not found — run 'cfops init' first");
+        anyhow::bail!("wrangler.toml not found — run 'cfops worker --create' first");
     }
 
     let content = fs::read_to_string(path)?;
@@ -141,7 +143,7 @@ pub fn attach_domain(domain: &str) -> Result<()> {
 
     fs::write(path, new_content)?;
     println!("\x1b[32m✓\x1b[0m wrangler.toml updated — {domain} will be attached on next deploy");
-    println!("  Run \x1b[1mcfops deploy\x1b[0m to attach the domain");
+    println!("  Run \x1b[1mcfops worker --deploy\x1b[0m to attach the domain");
 
     Ok(())
 }
@@ -177,7 +179,7 @@ fn today_iso() -> String {
     format!("{y:04}-{m:02}-{d:02}")
 }
 
-fn scaffold_terraform(account_name: Option<&str>) -> Result<()> {
+fn scaffold_terraform() -> Result<()> {
     if Path::new(TERRAFORM_DIR).exists() {
         println!("terraform/ already exists — skipping");
         return Ok(());
@@ -194,7 +196,7 @@ fn scaffold_terraform(account_name: Option<&str>) -> Result<()> {
     };
 
     println!("Initialising DNS config...");
-    let account_id = resolve_account_id(account_name)?;
+    let account_id = resolve_account_id(None)?;
 
     fs::create_dir_all(TERRAFORM_DIR)?;
 
@@ -315,11 +317,6 @@ fn gitignore_contains(path: &str) -> bool {
     fs::read_to_string(GITIGNORE_FILE)
         .map(|contents| contents.lines().any(|line| line == path))
         .unwrap_or(false)
-}
-
-fn confirm(message: &str) -> Result<bool> {
-    let input = prompt(message)?;
-    Ok(matches!(input.to_lowercase().as_str(), "y" | "yes"))
 }
 
 fn prompt(message: &str) -> Result<String> {

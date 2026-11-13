@@ -47,6 +47,14 @@ fn run(args: Vec<String>) -> Result<i32> {
             init::run()?;
             Ok(0)
         }
+        Command::WorkerCreate => {
+            init::create_worker()?;
+            Ok(0)
+        }
+        Command::ZoneInit => {
+            init::init_zone()?;
+            Ok(0)
+        }
         Command::WorkerDeploy => run_wrangler(&["deploy".to_string()]),
         Command::WorkerDelete => run_wrangler(&["delete".to_string()]),
         Command::WorkerList => {

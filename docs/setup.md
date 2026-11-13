@@ -7,7 +7,9 @@ Per-project configuration — credentials, project init, and IaC setup. Gets the
   - [2.1 Run Init](#21-run-init)
   - [2.2 Setup Actions](#22-setup-actions)
   - [2.3 Verify](#23-verify)
-- [3. DNS IaC Setup](#3-dns-iac-setup)
+- [3. Worker Setup](#3-worker-setup)
+  - [3.1 Scaffold Worker Config](#31-scaffold-worker-config)
+- [4. DNS IaC Setup](#4-dns-iac-setup)
 
 ## 1. Credentials
 
@@ -21,12 +23,12 @@ If you don't already have one, create a [Cloudflare](https://cloudflare.com) acc
 
 **Account ID** — in the URL of any dashboard page: `dash.cloudflare.com/<account-id>/...`
 
-**API Tokens** — create both tokens via [Dashboard → My Profile → API Tokens → Create Token](https://dash.cloudflare.com/profile/api-tokens):
+**API Tokens** — create both tokens via **Dashboard → Manage Account → Account API Tokens → Create Token**:
 
 | Token Name | Purpose | Template | Expiration | Account policy | Zone policy | Config |
 |---|---|---|---|---|---|---|
 | **Worker provisioning token** | Wrangler | Edit Cloudflare Workers | 1 year | Select account | All zones from account | template defaults are sufficient |
-| **DNS config token (`<DOMAIN>`)** | Terraform | Edit zone DNS | 1 year | N/A | All zones from account | see [DNS IaC Setup](dns/dns-setup.md) for required permissions |
+| **DNS config token (`<DOMAIN>`)** | Terraform | Edit zone DNS | 1 year | N/A | All zones from account | template defaults are a good start for now |
 
 ### 1.3 Store Credentials (Bitwarden)
 
@@ -68,11 +70,9 @@ cfops init
 ```
 
 `cfops init` prompts for:
-- Bitwarden machine account name → writes `.envrc`
-- Whether to set up a worker — if yes, prompts for worker name and scaffolds `wrangler.toml`
-- Whether to set up DNS for a domain — if yes, prompts for domain and scaffolds `terraform/`
+- Bitwarden machine account name → writes `.envrc` and adds it to `.gitignore`
 
-> **Note:** `.envrc` is added to `.gitignore` automatically. If DNS is configured, Terraform-related entries (`terraform/backend.hcl`, `.terraform/`, state files) are also added following standard Terraform conventions.
+That's all init does. Worker and DNS scaffolding are separate commands run after `direnv allow`, once credentials are live — see sections 3 and 4.
 
 ### 2.2 Setup Actions
 
@@ -86,10 +86,26 @@ Verify credentials are working:
 cfops -wr whoami
 ```
 
-## 3. DNS IaC Setup
+## 3. Worker Setup
+
+If you're deploying a Cloudflare Worker, scaffold the worker config now. Skip this section if you only need DNS management.
+
+### 3.1 Scaffold Worker Config
+
+```bash
+cfops worker --create
+```
+
+Prompts for:
+- Worker name (e.g. `mysite-static`, `mysite-host`)
+- Assets directory (default: `./dist`)
+
+Writes `wrangler.toml` to the project root with today's compatibility date.
+
+## 4. DNS IaC Setup
 
 If you're going to use cfops for DNS config, set up DNS IaC by following the [DNS Setup Guide](dns/dns-setup.md).
 
-## 4. Setup Complete
+## 5. Setup Complete
 
 cfops is now setup and ready for use. Next step is to follow the [usage guide](usage-orientation.md).

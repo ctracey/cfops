@@ -21,6 +21,7 @@ Follow the [ops guide](usage-scenarios.md) for practical examples for worker pro
 `cfops` injects Cloudflare credentials from Bitwarden before delegating to Wrangler. Credentials are never stored on disk or exported to the shell.
 
 ```bash
+cfops worker --create             # Scaffold wrangler.toml for a new worker
 cfops worker --deploy             # Deploy the worker
 cfops worker --delete             # Delete the worker (prompts for confirmation)
 cfops worker --list               # Open Workers & Pages dashboard
@@ -97,5 +98,7 @@ Once credentials are in Bitwarden and Keychain for an account, additional projec
 mise install
 cfops init
 direnv allow
+cfops worker --create   # if setting up a worker
+cfops zone --init       # if setting up DNS
 cfops -wr whoami
 ```

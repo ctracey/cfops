@@ -73,7 +73,7 @@ pub fn help_text() -> String {
         "  cfops worker --deploy".to_string(),
         "  cfops worker --delete".to_string(),
         "  cfops worker --list".to_string(),
-        "  cfops worker --attach tracerview.com".to_string(),
+        "  cfops worker --attach example.com".to_string(),
         "  cfops -wr deployments status".to_string(),
         "  cfops -tf plan".to_string(),
     ]

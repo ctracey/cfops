@@ -60,3 +60,9 @@ If a new release isn't picked up, clear the mise cache first:
 mise cache clear
 mise upgrade
 ```
+
+If mise still hasn't recognised the latest version after clearing the cache, force-install directly by specifying the version explicitly:
+
+```bash
+mise install 'github:ctracey/cfops@<VERSION>'
+```

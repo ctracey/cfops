@@ -126,10 +126,20 @@ fn init_creates_envrc_and_gitignore_entry() {
     let gitignore = fs::read_to_string(dir.path().join(".gitignore")).unwrap();
     assert!(gitignore.lines().any(|l| l == ".envrc"));
     assert!(gitignore.lines().any(|l| l == ".wrangler"));
-    assert!(gitignore.lines().any(|l| l == "terraform/backend.hcl"));
     assert!(gitignore.lines().any(|l| l == ".terraform"));
     assert!(gitignore.lines().any(|l| l == "*.tfstate"));
     assert!(gitignore.lines().any(|l| l == "*.tfstate.backup"));
+    assert!(gitignore.lines().any(|l| l == "crash.log"));
+    assert!(gitignore.lines().any(|l| l == "crash.*.log"));
+    assert!(gitignore.lines().any(|l| l == "*.tfvars"));
+    assert!(gitignore.lines().any(|l| l == "*.tfvars.json"));
+    assert!(gitignore.lines().any(|l| l == "override.tf"));
+    assert!(gitignore.lines().any(|l| l == "*_override.tf"));
+    assert!(gitignore.lines().any(|l| l == "override.tf.json"));
+    assert!(gitignore.lines().any(|l| l == "*_override.tf.json"));
+    assert!(gitignore.lines().any(|l| l == ".terraformrc"));
+    assert!(gitignore.lines().any(|l| l == "terraform.rc"));
+    assert!(!gitignore.lines().any(|l| l == "terraform/backend.hcl"));
     assert!(!gitignore.lines().any(|l| l == ".terraform.lock.hcl"));
 }
 

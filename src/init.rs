@@ -11,10 +11,19 @@ use crate::credentials::BwsToken;
 const ENVRC_FILE: &str = ".envrc";
 const GITIGNORE_FILE: &str = ".gitignore";
 const TERRAFORM_DIR: &str = "terraform";
-const TF_BACKEND_FILE: &str = "terraform/backend.hcl";
 const TF_LOCAL_DIR: &str = ".terraform";
 const TF_STATE_GLOB: &str = "*.tfstate";
 const TF_STATE_BACKUP_GLOB: &str = "*.tfstate.backup";
+const TF_CRASH_LOG: &str = "crash.log";
+const TF_CRASH_LOG_GLOB: &str = "crash.*.log";
+const TF_VARS_GLOB: &str = "*.tfvars";
+const TF_VARS_JSON_GLOB: &str = "*.tfvars.json";
+const TF_OVERRIDE: &str = "override.tf";
+const TF_OVERRIDE_GLOB: &str = "*_override.tf";
+const TF_OVERRIDE_JSON: &str = "override.tf.json";
+const TF_OVERRIDE_JSON_GLOB: &str = "*_override.tf.json";
+const TF_CLI_OVERRIDES: &str = ".terraformrc";
+const TF_CLI_OVERRIDES_ALT: &str = "terraform.rc";
 const NODE_MINIMUM_MAJOR_VERSION: u32 = 22;
 const CLOUDFLARE_ACCOUNT_ID_ENV: &str = "CLOUDFLARE_ACCOUNT_ID";
 
@@ -34,10 +43,19 @@ pub fn run() -> Result<()> {
     ensure_gitignore_entries("direnv", &[ENVRC_FILE])?;
     ensure_gitignore_entries("wrangler", &[WRANGLER_LOCAL_DIR])?;
     ensure_gitignore_entries("terraform", &[
-        TF_BACKEND_FILE,
         TF_LOCAL_DIR,
         TF_STATE_GLOB,
         TF_STATE_BACKUP_GLOB,
+        TF_CRASH_LOG,
+        TF_CRASH_LOG_GLOB,
+        TF_VARS_GLOB,
+        TF_VARS_JSON_GLOB,
+        TF_OVERRIDE,
+        TF_OVERRIDE_GLOB,
+        TF_OVERRIDE_JSON,
+        TF_OVERRIDE_JSON_GLOB,
+        TF_CLI_OVERRIDES,
+        TF_CLI_OVERRIDES_ALT,
     ])?;
 
     if setup_envrc()? {

@@ -15,11 +15,11 @@ const TF_BACKEND_FILE: &str = "terraform/backend.hcl";
 const TF_LOCAL_DIR: &str = ".terraform";
 const TF_STATE_GLOB: &str = "*.tfstate";
 const TF_STATE_BACKUP_GLOB: &str = "*.tfstate.backup";
-const TF_LOCK_FILE: &str = ".terraform.lock.hcl";
 const NODE_MINIMUM_MAJOR_VERSION: u32 = 22;
 const CLOUDFLARE_ACCOUNT_ID_ENV: &str = "CLOUDFLARE_ACCOUNT_ID";
 
 const WRANGLER_FILE: &str = "wrangler.toml";
+const WRANGLER_LOCAL_DIR: &str = ".wrangler";
 const WRANGLER_TEMPLATE: &str = include_str!("../templates/wrangler/static-worker/wrangler.toml");
 const ENVRC_TEMPLATE: &str = include_str!("../templates/direnv/.envrc");
 const TF_MAIN: &str = include_str!("../templates/terraform/main.tf");
@@ -31,6 +31,15 @@ pub fn run() -> Result<()> {
     let mut actions: Vec<String> = Vec::new();
 
     section("Account setup");
+    ensure_gitignore_entries("direnv", &[ENVRC_FILE])?;
+    ensure_gitignore_entries("wrangler", &[WRANGLER_LOCAL_DIR])?;
+    ensure_gitignore_entries("terraform", &[
+        TF_BACKEND_FILE,
+        TF_LOCAL_DIR,
+        TF_STATE_GLOB,
+        TF_STATE_BACKUP_GLOB,
+    ])?;
+
     if setup_envrc()? {
         actions.push("run 'direnv allow' to activate".to_string());
         if let Some(msg) = node_version_warning() {
@@ -82,8 +91,6 @@ fn setup_envrc() -> Result<bool> {
     println!("Initialising account config...");
     write_envrc(&account_name)?;
     println!("\x1b[32m✓\x1b[0m .envrc created");
-
-    ensure_gitignore_entries("direnv", &[ENVRC_FILE])?;
 
     Ok(true)
 }
@@ -212,14 +219,6 @@ fn scaffold_terraform() -> Result<()> {
             .replace("<CLOUDFLARE_ACCOUNT_ID>", &account_id);
         fs::write(format!("{TERRAFORM_DIR}/{filename}"), content)?;
     }
-
-    ensure_gitignore_entries("terraform", &[
-        TF_BACKEND_FILE,
-        TF_LOCAL_DIR,
-        TF_STATE_GLOB,
-        TF_STATE_BACKUP_GLOB,
-        TF_LOCK_FILE,
-    ])?;
 
     println!("\x1b[32m✓\x1b[0m terraform/ scaffolded");
 

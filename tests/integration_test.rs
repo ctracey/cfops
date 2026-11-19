@@ -125,6 +125,30 @@ fn init_creates_envrc_and_gitignore_entry() {
 
     let gitignore = fs::read_to_string(dir.path().join(".gitignore")).unwrap();
     assert!(gitignore.lines().any(|l| l == ".envrc"));
+    assert!(gitignore.lines().any(|l| l == ".wrangler"));
+    assert!(gitignore.lines().any(|l| l == "terraform/backend.hcl"));
+    assert!(gitignore.lines().any(|l| l == ".terraform"));
+    assert!(gitignore.lines().any(|l| l == "*.tfstate"));
+    assert!(gitignore.lines().any(|l| l == "*.tfstate.backup"));
+    assert!(!gitignore.lines().any(|l| l == ".terraform.lock.hcl"));
+}
+
+#[test]
+fn init_adds_all_gitignore_entries_even_when_envrc_exists() {
+    let dir = TempDir::new().unwrap();
+    fs::write(dir.path().join(".envrc"), "existing content").unwrap();
+
+    cfops()
+        .arg("init")
+        .current_dir(dir.path())
+        .write_stdin("")
+        .assert()
+        .success();
+
+    let gitignore = fs::read_to_string(dir.path().join(".gitignore")).unwrap();
+    assert!(gitignore.lines().any(|l| l == ".wrangler"));
+    assert!(gitignore.lines().any(|l| l == ".terraform"));
+    assert!(gitignore.lines().any(|l| l == "*.tfstate"));
 }
 
 #[test]
@@ -218,6 +242,20 @@ fn worker_create_accepts_custom_assets_dir() {
 }
 
 #[test]
+fn worker_create_does_not_add_gitignore_entries() {
+    let dir = TempDir::new().unwrap();
+
+    cfops()
+        .args(["worker", "--create"])
+        .current_dir(dir.path())
+        .write_stdin("mysite-static\n\n")
+        .assert()
+        .success();
+
+    assert!(!dir.path().join(".gitignore").exists());
+}
+
+#[test]
 fn worker_create_skips_when_wrangler_toml_exists() {
     let dir = TempDir::new().unwrap();
     fs::write(dir.path().join("wrangler.toml"), "existing content").unwrap();
@@ -306,6 +344,20 @@ fn zone_init_accepts_custom_resource_label() {
 
     let main_tf = fs::read_to_string(dir.path().join("terraform/main.tf")).unwrap();
     assert!(main_tf.contains("cloudflare_zone.custom_label"));
+}
+
+#[test]
+fn zone_init_does_not_add_gitignore_entries() {
+    let dir = TempDir::new().unwrap();
+
+    cfops()
+        .args(["zone", "--init"])
+        .current_dir(dir.path())
+        .write_stdin("acme.com\n\naccount123\n")
+        .assert()
+        .success();
+
+    assert!(!dir.path().join(".gitignore").exists());
 }
 
 #[test]
